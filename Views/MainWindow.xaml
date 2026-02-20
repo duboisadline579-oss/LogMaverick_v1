@@ -8,59 +8,52 @@
         <h:PauseColorConverter x:Key="PauseColorConverter"/>
     </Window.Resources>
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="25"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Background="#121212" BorderBrush="#222" BorderThickness="0,0,1,0">
+        <Border Grid.Row="0" Background="#121212" BorderBrush="#222" BorderThickness="0,0,1,0">
             <Grid Margin="15">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <StackPanel>
                     <TextBlock Text="MAVERICK v3" Foreground="#007AFF" FontSize="20" FontWeight="Black" Margin="0,0,0,20"/>
-                    <TextBlock Text="SERVER" Foreground="#555" FontSize="10" FontWeight="Bold" Margin="0,5"/>
-                    <ComboBox x:Name="SrvList" ItemsSource="{Binding Servers}" SelectedItem="{Binding SelectedServer}" DisplayMemberPath="Alias" Height="32" Margin="0,0,0,5"/>
+                    <ComboBox x:Name="SrvList" ItemsSource="{Binding Servers}" SelectedItem="{Binding SelectedServer}" DisplayMemberPath="Alias" Height="32" Margin="0,5"/>
                     <Button Content="SERVER CONFIG" Click="Config_Click" Height="28" Background="#252525" Foreground="#AAA" BorderThickness="0"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Margin="0,20,0,0">
-                    <TextBlock Text="LOG EXPLORER" Foreground="#555" FontSize="10" FontWeight="Bold" Margin="0,5"/>
+                    <TextBlock Text="EXPLORER" Foreground="#555" FontSize="10" FontWeight="Bold" Margin="0,5"/>
                     <TreeView x:Name="FileTree" Height="400" Background="#0A0A0A" Foreground="#888" BorderThickness="0" MouseDoubleClick="File_DoubleClick"/>
                 </StackPanel>
                 <StackPanel Grid.Row="3">
                     <Button Content="START CONNECT" Click="Connect_Click" Height="40" Background="#007AFF" Foreground="White" FontWeight="Bold" Margin="0,5"/>
-                    <Button Content="REFRESH TREE" Click="Refresh_Click" Height="30" Background="#222" Foreground="#888" BorderThickness="0"/>
+                    <Button Content="REFRESH" Click="Refresh_Click" Height="30" Background="#222" Foreground="#888" BorderThickness="0"/>
                 </StackPanel>
             </Grid>
         </Border>
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="1" Grid.Row="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-
             <Border Background="#440000" Visibility="{Binding ErrorVisibility}" Height="45">
                 <Button Click="ErrorBox_Click" Background="Transparent" BorderThickness="0">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚠ EXCEPTIONS DETECTED:" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding ErrorHistory.Count}" Foreground="White" Margin="10,0" VerticalAlignment="Center" FontWeight="Black"/>
+                        <TextBlock Text="⚠ EXCEPTIONS:" Foreground="White" VerticalAlignment="Center" Margin="10,0"/>
+                        <TextBlock Text="{Binding ErrorHistory.Count}" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
                     </StackPanel>
                 </Button>
             </Border>
-
             <Grid Grid.Row="1" Background="#161616" Padding="15,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Background="#0A0A0A" Foreground="White" BorderBrush="#333" Height="35" VerticalContentAlignment="Center" Padding="10,0" Tag="SEARCH LOGS..."/>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Background="#0A0A0A" Foreground="White" BorderBrush="#333" Height="35" VerticalContentAlignment="Center" Padding="10,0"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
-                    <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="100" Height="35" Background="{Binding IsPaused, Converter={StaticResource PauseColorConverter}}" Foreground="White" Margin="0,0:5,0" FontWeight="Bold"/>
+                    <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="100" Height="35" Background="{Binding IsPaused, Converter={StaticResource PauseColorConverter}}" Foreground="White" Margin="0,0,5,0" FontWeight="Bold"/>
                     <Button Content="EXPORT" Click="Export_Click" Width="80" Height="35" Background="#222" Foreground="White" Margin="0,0,5,0"/>
                     <Button Content="CLEAR" Click="Clear_Click" Width="80" Height="35" Background="#222" Foreground="White"/>
                 </StackPanel>
@@ -68,37 +61,17 @@
             <TabControl x:Name="MainTabs" Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="10">
                 <TabControl.Resources>
                     <ContextMenu x:Key="LogMenu">
-                        <MenuItem Header="Copy Message" Click="Copy_Click"/>
-                        <MenuItem Header="Trace TID" Click="Log_DoubleClick"/>
-                        <Separator Background="#333"/>
-                        <MenuItem Header="Exclude this TID" Click="Exclude_Click"/>
+                        <MenuItem Header="Copy Message" Click="Copy_Click"/><MenuItem Header="Trace TID" Click="Log_DoubleClick"/><Separator/><MenuItem Header="Exclude this TID" Click="Exclude_Click"/>
                     </ContextMenu>
                     <Style TargetType="ListView">
-                        <Setter Property="Background" Value="#0A0A0A"/><Setter Property="Foreground" Value="#BBB"/><Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="ContextMenu" Value="{StaticResource LogMenu}"/>
+                        <Setter Property="Background" Value="#0A0A0A"/><Setter Property="Foreground" Value="#BBB"/><Setter Property="ContextMenu" Value="{StaticResource LogMenu}"/>
+                        <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True"/><Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"/>
                     </Style>
                 </TabControl.Resources>
-                <TabItem Header="MACHINE">
-                    <ListView ItemsSource="{Binding MachineLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick">
-                        <ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="800"/></GridView></ListView.View>
-                    </ListView>
-                </TabItem>
-                <TabItem Header="PROCESS">
-                    <ListView ItemsSource="{Binding ProcessLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick">
-                        <ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="800"/></GridView></ListView.View>
-                    </ListView>
-                </TabItem>
-                <TabItem Header="DRIVER">
-                    <ListView ItemsSource="{Binding DriverLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick">
-                        <ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="800"/></GridView></ListView.View>
-                    </ListView>
-                </TabItem>
-                <TabItem Header="OTHERS">
-                    <ListView ItemsSource="{Binding OtherLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick">
-                        <ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="800"/></GridView></ListView.View>
-                    </ListView>
-                </TabItem>
+                <TabItem Header="MACHINE"><ListView ItemsSource="{Binding MachineLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="120"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="80"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
+                <TabItem Header="PROCESS"><ListView ItemsSource="{Binding ProcessLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="120"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="80"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
             </TabControl>
         </Grid>
+        <StatusBar Grid.Row="1" Grid.ColumnSpan="2" Background="#007AFF"><StatusBarItem><TextBlock Text="{Binding StatusMessage}" Foreground="White" FontSize="11" FontWeight="Bold"/></StatusBarItem></StatusBar>
     </Grid>
 </Window>
