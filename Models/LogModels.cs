@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace LogMaverick.Models {
+    public enum LogType { System, Error, Exception }
+    
     public class ServerConfig : INotifyPropertyChanged {
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string Alias { get; set; } = "운영 서버";
+        public string Alias { get; set; } = "New Server";
         public string Host { get; set; } = "";
         public int Port { get; set; } = 22;
         public string Username { get; set; } = "";
-        public string Password { get; set; } = ""; 
+        public string Password { get; set; } = "";
         public string RootPath { get; set; } = "/var/log";
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnProp(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
@@ -17,18 +19,18 @@ namespace LogMaverick.Models {
 
     public class LogEntry {
         public DateTime Time { get; set; } = DateTime.Now;
-        public string Level { get; set; } = "INFO";
-        public string Source { get; set; } = "SYS";
         public string Tid { get; set; } = "0000";
         public string Message { get; set; } = "";
-        public string Category { get; set; } = "OTHERS"; 
-        public string TextColor { get; set; } = "#DCDCDC";
+        public string Category { get; set; } = "OTHERS";
+        public LogType Type { get; set; } = LogType.System;
+        public bool IsHighlighted { get; set; } = false;
+        public string Color => IsHighlighted ? "#FFD700" : (Type == LogType.Error ? "#FF4500" : (Type == LogType.Exception ? "#FF00FF" : "#DCDCDC"));
     }
 
     public class FileNode {
         public string Name { get; set; } = "";
         public string FullPath { get; set; } = "";
         public bool IsDirectory { get; set; }
-        public List<FileNode> Children { get; set; } = new List<FileNode>();
+        public List<FileNode> Children { get; set; } = new();
     }
 }

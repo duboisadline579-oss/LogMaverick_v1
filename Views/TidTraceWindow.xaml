@@ -1,0 +1,12 @@
+<Window x:Class="LogMaverick.Views.TidTraceWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="TID Trace View" Height="600" Width="900" Background="#050505">
+<Grid Margin="10">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <TextBlock x:Name="TidTitle" Foreground="#007AFF" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+    <ListView Grid.Row="1" x:Name="TraceList" Background="Transparent" Foreground="#DCDCDC" BorderThickness="0">
+        <ListView.View><GridView>
+            <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time}" Width="150"/>
+            <GridViewColumn Header="Cat" DisplayMemberBinding="{Binding Category}" Width="80"/>
+            <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="630"/>
+        </GridView></ListView.View>
+    </ListView>
+</Grid></Window>
