@@ -25,3 +25,27 @@
 <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="15">
 <Button Content="CONNECT" Click="Connect_Click" Width="110" Height="32" Margin="5" Background="#007AFF" Foreground="White" BorderThickness="0"/>
 <Button Content="CLEAR ALL" Click="Clear_Click" Width="110" Height="32" Margin="5" Background="#222" Foreground="White" BorderThickness="0"/></StackPanel></Grid></Grid></Window>
+<TabControl x:Name="MainTabs" Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="10,0">
+<TabControl.Resources>
+<ContextMenu x:Key="LogMenu"><MenuItem Header="Copy Message" Click="Copy_Click"/><MenuItem Header="Trace TID" Click="Log_DoubleClick"/><Separator/><MenuItem Header="Exclude this TID" Click="Exclude_Click"/></ContextMenu>
+<Style TargetType="ListView">
+    <Setter Property="Background" Value="#0A0A0A"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Foreground" Value="#DCDCDC"/><Setter Property="ContextMenu" Value="{StaticResource LogMenu}"/>
+    <Setter Property="View">
+        <Setter.Value>
+            <GridView>
+                <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time}" Width="150"/>
+                <GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/>
+                <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="800"/>
+            </GridView>
+        </Setter.Value>
+    </Setter>
+</Style>
+</TabControl.Resources>
+<TabItem Header="MACHINE"><ListView ItemsSource="{Binding MachineLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+<TabItem Header="PROCESS"><ListView ItemsSource="{Binding ProcessLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+<TabItem Header="DRIVER"><ListView ItemsSource="{Binding DriverLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+<TabItem Header="OTHERS"><ListView ItemsSource="{Binding OtherLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+</TabControl>
+<StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="15">
+<Button Content="CONNECT" Click="Connect_Click" Width="110" Height="32" Margin="5" Background="#007AFF" Foreground="White" BorderThickness="0"/>
+<Button Content="CLEAR ALL" Click="Clear_Click" Width="110" Height="32" Margin="5" Background="#222" Foreground="White" BorderThickness="0"/></StackPanel></Grid></Grid></Window>
