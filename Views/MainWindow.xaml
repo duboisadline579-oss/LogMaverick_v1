@@ -1,31 +1,23 @@
-<Window x:Class="LogMaverick.Views.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="LOG MAVERICK v3 Enterprise" Height="900" Width="1550" Background="#0F0F0F">
-    <Grid>
-        <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-        <Border Background="#161616" BorderBrush="#252525" BorderThickness="0,0,1,0">
-            <StackPanel Margin="20">
-                <TextBlock Text="SERVER" Foreground="#555" FontWeight="Bold" Margin="0,0,0,10"/>
-                <ListBox ItemsSource="{Binding Servers}" x:Name="SrvList" Height="150" Background="#222" Foreground="White" DisplayMemberPath="Alias"/>
-                <StackPanel Orientation="Horizontal" Margin="0,10">
-                    <Button Content="ADD" Click="Add_Click" Width="60" Margin="0,0,5,0"/>
-                    <Button Content="DEL" Click="Del_Click" Width="60"/>
-                </StackPanel>
-                <TreeView x:Name="FileTree" Height="400" Margin="0,10" Background="Transparent" Foreground="White" MouseDoubleClick="File_DoubleClick"/>
-            </StackPanel>
-        </Border>
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <Border Background="#440000" Visibility="{Binding ErrorVisibility}" Height="40">
-                <TextBlock Text="{Binding ErrorCount, StringFormat='⚠ {0} NEW ERRORS DETECTED'}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
-            </Border>
-            <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
-                <TabItem Header="MACHINE"><ListView ItemsSource="{Binding MachineLogs}" Background="Transparent" BorderThickness="0" MouseDoubleClick="Log_DoubleClick"/></TabItem>
-                <TabItem Header="PROCESS"><ListView ItemsSource="{Binding ProcessLogs}" Background="Transparent" BorderThickness="0" MouseDoubleClick="Log_DoubleClick"/></TabItem>
-                <TabItem Header="DRIVER"><ListView ItemsSource="{Binding DriverLogs}" Background="Transparent" BorderThickness="0" MouseDoubleClick="Log_DoubleClick"/></TabItem>
-            </TabControl>
-            <Button Content="🗑 CLEAR" Click="Clear_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="20" Width="80" Height="30" Background="#333" Foreground="White"/>
-        </Grid>
-    </Grid>
-</Window>
+<Window x:Class="LogMaverick.Views.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="LOG MAVERICK v3" Height="900" Width="1550" Background="#0F0F0F">
+<Grid><Grid.ColumnDefinitions><ColumnDefinition Width="320"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+<Border Background="#161616" BorderBrush="#252525" BorderThickness="0,0,1,0"><Grid Margin="20"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+<TextBlock Text="LOG MAVERICK" Foreground="#007AFF" FontSize="22" FontWeight="Black" Margin="0,0,0,30"/>
+<StackPanel Grid.Row="1"><TextBlock Text="SERVER LIST" Foreground="#555" FontWeight="Bold" Margin="0,0,0,10"/>
+<ListBox ItemsSource="{Binding Servers}" x:Name="SrvList" Height="150" Background="#222" Foreground="White" BorderThickness="0" DisplayMemberPath="Alias"/>
+<Grid Margin="0,10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+<Button Content="ADD" Click="Add_Click" Margin="0,0,5,0" Background="#007AFF" Foreground="White" Height="30"/>
+<Button Grid.Column="1" Content="DEL" Click="Del_Click" Background="#333" Foreground="White" Height="30"/></Grid></StackPanel>
+<StackPanel Grid.Row="2" Margin="0,20,0,0"><TextBlock Text="FILE EXPLORER" Foreground="#555" FontWeight="Bold" Margin="0,0,0,10"/>
+<TreeView x:Name="FileTree" Background="Transparent" Foreground="#DCDCDC" BorderThickness="0" MouseDoubleClick="File_DoubleClick"/></StackPanel>
+<Button Grid.Row="3" Content="REFRESH" Click="Refresh_Click" Height="35" Background="#222" Foreground="White"/></Grid></Border>
+<Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+<Border Background="#440000" Visibility="{Binding ErrorVisibility}" Height="45"><StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+<TextBlock Text="⚠ NEW EXCEPTIONS:" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
+<TextBlock Text="{Binding ErrorCount}" Foreground="Tomato" VerticalAlignment="Center" Margin="10,0" FontWeight="Black" FontSize="16"/></StackPanel></Border>
+<TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="10">
+<TabItem Header="MACHINE"><ListView ItemsSource="{Binding MachineLogs}" Background="#0F0F0F" BorderThickness="0" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+<TabItem Header="PROCESS"><ListView ItemsSource="{Binding ProcessLogs}" Background="#0F0F0F" BorderThickness="0" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+<TabItem Header="DRIVER"><ListView ItemsSource="{Binding DriverLogs}" Background="#0F0F0F" BorderThickness="0" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+<TabItem Header="OTHERS"><ListView ItemsSource="{Binding OtherLogs}" Background="#0F0F0F" BorderThickness="0" MouseDoubleClick="Log_DoubleClick"/></TabItem>
+</TabControl>
+<Button Grid.Row="2" Content="🗑 CLEAR ALL" Click="Clear_Click" Width="120" Height="30" HorizontalAlignment="Right" Margin="20" Background="#222" Foreground="White"/></Grid></Grid></Window>

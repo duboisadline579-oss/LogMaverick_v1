@@ -7,10 +7,12 @@ namespace LogMaverick.Models {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Alias { get; set; } = "운영 서버";
         public string Host { get; set; } = "";
+        public int Port { get; set; } = 22;
         public string Username { get; set; } = "";
         public string Password { get; set; } = ""; 
         public string RootPath { get; set; } = "/var/log";
         public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnProp(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
     }
 
     public class LogEntry {
@@ -19,7 +21,7 @@ namespace LogMaverick.Models {
         public string Source { get; set; } = "SYS";
         public string Tid { get; set; } = "0000";
         public string Message { get; set; } = "";
-        public string Category { get; set; } = "MACHINE"; // 탭 구분용
+        public string Category { get; set; } = "OTHERS"; 
         public string TextColor { get; set; } = "#DCDCDC";
     }
 
