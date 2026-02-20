@@ -1,13 +1,20 @@
 using System.Windows;
-using LogMaverick.ViewModels;
 using LogMaverick.Models;
+using LogMaverick.ViewModels;
 namespace LogMaverick.Views {
     public partial class MainWindow : Window {
-        private readonly MainViewModel _vm = new();
-        public MainWindow() { InitializeComponent(); DataContext = _vm; }
-        private void Connect_Click(object sender, RoutedEventArgs e) {
-            _vm.Connect(new ServerConfig { Host="IP입력", Username="root", Password="비번" });
+        public MainWindow() { InitializeComponent(); DataContext = new MainViewModel(); }
+        private void BtnConnect_Click(object sender, RoutedEventArgs e) {
+            var s = (ServerConfig)ServerListBox.SelectedItem;
+            if(s != null) ((MainViewModel)DataContext).Connect(s);
         }
-        private void Pause_Click(object sender, RoutedEventArgs e) => _vm.TogglePause();
+        private void Log_DoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            var log = (LogEntry)((FrameworkElement)e.OriginalSource).DataContext;
+            if(log != null) {
+                var win = new LogDetailWindow();
+                win.TxtDetail.Text = log.Message;
+                win.Show();
+            }
+        }
     }
 }
