@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Renci.SshNet;
 using LogMaverick.Models;
 
@@ -9,67 +11,55 @@ namespace LogMaverick.Services {
     public class LogCoreEngine : IDisposable {
         private SshClient? _client;
         private ShellStream? _stream;
+        private CancellationTokenSource? _cts;
         public event Action<LogEntry>? OnLogReceived;
+        public event Action<string>? OnStatusChanged;
+        private readonly Regex _tidRegex = new Regex(@"(?i)(?:TID[:\s-]*|\[|ID:)(\d+)", RegexOptions.Compiled);
 
-        // TID 패턴 추출 (예: [1234] 또는 TID:1234 또는 T-1234 등 검색)
         private string ExtractTid(string message) {
-            var match = Regex.Match(message, @"(?i)(TID[:\s-]*|\[)(\d+)\]?");
-            return match.Success ? match.Groups[2].Value : "0000";
+            var match = _tidRegex.Match(message);
+            return match.Success ? match.Groups[1].Value : "0000";
         }
         public List<FileNode> GetFileTree(ServerConfig config) {
             var nodes = new List<FileNode>();
             try {
-                using var client = new SshClient(config.Host, config.Username, config.Password);
+                using var client = new SshClient(config.Host, config.Port, config.Username, config.Password);
                 client.Connect();
-                // .log 파일만 2단계 깊이까지 검색
                 var cmd = client.RunCommand($"find {config.RootPath} -maxdepth 2 -name \"*.log\"");
-                foreach(var path in cmd.Result.Split('\n')) {
-                    if(string.IsNullOrWhiteSpace(path)) continue;
-                    nodes.Add(new FileNode { 
-                        Name = System.IO.Path.GetFileName(path), 
-                        FullPath = path, 
-                        IsDirectory = false 
-                    });
+                foreach(var path in cmd.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries)) {
+                    nodes.Add(new FileNode { Name = System.IO.Path.GetFileName(path), FullPath = path.Trim() });
                 }
-            } catch (Exception ex) {
-                Console.WriteLine($"Tree Error: {ex.Message}");
-            }
+            } catch (Exception ex) { OnStatusChanged?.Invoke("Tree Error: " + ex.Message); }
             return nodes;
         }
-        public void StartStreaming(ServerConfig config, string filePath) {
-            _client?.Dispose();
-            _client = new SshClient(config.Host, config.Username, config.Password);
-            _client.Connect();
-            
-            _stream = _client.CreateShellStream("LogMaverickStream", 0, 0, 0, 0, 1024);
-            _stream.DataReceived += (s, e) => {
-                var raw = Encoding.UTF8.GetString(e.Data);
-                foreach (var line in raw.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    string upperLine = line.ToUpper();
-                    
-                    // 1. 에러 타입 판별
-                    LogType type = LogType.System;
-                    if (upperLine.Contains("ERROR") || upperLine.Contains("FAIL")) type = LogType.Error;
-                    else if (upperLine.Contains("EXCEPTION") || upperLine.Contains("CRITICAL")) type = LogType.Exception;
 
-                    // 2. 카테고리 판별 (경로 기반)
-                    string category = "OTHERS";
-                    string lowerPath = filePath.ToLower();
-                    if (lowerPath.Contains("machine")) category = "MACHINE";
-                    else if (lowerPath.Contains("process")) category = "PROCESS";
-                    else if (lowerPath.Contains("driver")) category = "DRIVER";
-
-                    OnLogReceived?.Invoke(new LogEntry {
-                        Time = DateTime.Now,
-                        Message = line.Trim(),
-                        Category = category,
-                        Type = type,
-                        Tid = ExtractTid(line)
-                    });
-                }
-            };
-            _stream.WriteLine($"tail -F {filePath}");
+        public async Task StartStreamingAsync(ServerConfig config, string filePath) {
+            Dispose();
+            _cts = new CancellationTokenSource();
+            await Task.Run(() => {
+                try {
+                    _client = new SshClient(config.Host, config.Port, config.Username, config.Password);
+                    _client.KeepAliveInterval = TimeSpan.FromSeconds(30);
+                    _client.Connect();
+                    _stream = _client.CreateShellStream("LogStream", 0, 0, 0, 0, 4096);
+                    _stream.WriteLine($"tail -n 100 -F {filePath}");
+                    while (_client.IsConnected && !_cts.Token.IsCancellationRequested) {
+                        if (_stream.DataAvailable) ProcessRawData(_stream.Read(), filePath);
+                        Thread.Sleep(50);
+                    }
+                } catch (Exception ex) { OnStatusChanged?.Invoke("Stream Error: " + ex.Message); }
+            }, _cts.Token);
         }
-        public void Dispose() { _stream?.Dispose(); _client?.Dispose(); }
+        private void ProcessRawData(string data, string filePath) {
+            var lines = data.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines) {
+                if (string.IsNullOrWhiteSpace(line) || line.Contains("tail -n")) continue;
+                string up = line.ToUpper();
+                LogType type = up.Contains("ERROR") || up.Contains("FAIL") ? LogType.Error : (up.Contains("EXCEPTION") ? LogType.Exception : LogType.System);
+                string cat = filePath.ToLower().Contains("machine") ? "MACHINE" : (filePath.ToLower().Contains("process") ? "PROCESS" : (filePath.ToLower().Contains("driver") ? "DRIVER" : "OTHERS"));
+                OnLogReceived?.Invoke(new LogEntry { Time = DateTime.Now, Message = line.Trim(), Category = cat, Type = type, Tid = ExtractTid(line) });
+            }
+        }
+        public void Dispose() { _cts?.Cancel(); _stream?.Dispose(); _client?.Disconnect(); _client?.Dispose(); }
     }
 }

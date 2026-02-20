@@ -14,7 +14,6 @@ namespace LogMaverick.Models {
         public string Password { get; set; } = "";
         public string RootPath { get; set; } = "/var/log";
         public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnProp(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
     }
 
     public class LogEntry {
@@ -31,6 +30,5 @@ namespace LogMaverick.Models {
         public string Name { get; set; } = "";
         public string FullPath { get; set; } = "";
         public bool IsDirectory { get; set; }
-        public List<FileNode> Children { get; set; } = new();
     }
 }
