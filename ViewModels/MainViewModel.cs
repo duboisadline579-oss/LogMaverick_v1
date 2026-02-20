@@ -6,36 +6,31 @@ using LogMaverick.Services;
 
 namespace LogMaverick.ViewModels {
     public class MainViewModel : INotifyPropertyChanged {
-        private readonly LogCoreEngine _engine = new();
-        public ObservableCollection<LogEntry> LogTableData { get; } = new();
-        public ObservableCollection<ServerConfig> Servers { get; } = new();
-        
-        public string StatusText { get; set; } = "IDLE";
-        public string StatusColor { get; set; } = "#444";
+        private readonly LogCoreEngine _engine = new LogCoreEngine();
+        public ObservableCollection<ServerConfig> Servers { get; } = new ObservableCollection<ServerConfig>();
+        public ObservableCollection<LogEntry> MachineLogs { get; } = new ObservableCollection<LogEntry>();
+        public ObservableCollection<LogEntry> ProcessLogs { get; } = new ObservableCollection<LogEntry>();
+        public ObservableCollection<LogEntry> DriverLogs { get; } = new ObservableCollection<LogEntry>();
+
+        private int _errorCount = 0;
+        public int ErrorCount { get => _errorCount; set { _errorCount = value; OnProp("ErrorCount"); OnProp("ErrorVisibility"); } }
+        public Visibility ErrorVisibility => ErrorCount > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         public MainViewModel() {
-            var saved = ConfigService.Load();
-            foreach(var s in saved) Servers.Add(s);
-            
+            foreach(var s in ConfigService.Load()) Servers.Add(s);
             _engine.OnLogReceived += (e) => Application.Current.Dispatcher.Invoke(() => {
-                LogTableData.Insert(0, e);
-                if(LogTableData.Count > 5000) LogTableData.RemoveAt(5000);
+                if(e.Message.ToUpper().Contains("ERROR") || e.Message.ToUpper().Contains("EXCEPTION")) ErrorCount++;
+                if(e.Category == "PROCESS") ProcessLogs.Insert(0, e);
+                else if(e.Category == "DRIVER") DriverLogs.Insert(0, e);
+                else MachineLogs.Insert(0, e);
             });
-            _engine.OnStatusChanged += (s, c) => { StatusText = s; StatusColor = c; OnPropertyChanged("StatusText"); OnPropertyChanged("StatusColor"); };
         }
 
-        public void AddServer(ServerConfig s) {
-            Servers.Add(s);
-            ConfigService.Save(new System.Collections.Generic.List<ServerConfig>(Servers));
-        }
+        public void ClearAll() { MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); ErrorCount = 0; }
+        public void Connect(ServerConfig s, string path) => _engine.StartStreaming(s, path);
+        public List<FileNode> LoadFiles(ServerConfig s) => _engine.GetFileTree(s);
 
-        public void RemoveServer(ServerConfig s) {
-            Servers.Remove(s);
-            ConfigService.Save(new System.Collections.Generic.List<ServerConfig>(Servers));
-        }
-
-        public void Connect(ServerConfig s) => _engine.Connect(s);
         public event PropertyChangedEventHandler? PropertyChanged;
-        void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+        private void OnProp(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
     }
 }
