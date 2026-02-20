@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:h="clr-namespace:LogMaverick.Helpers"
-        Title="Log Maverick v3 Enterprise" Height="850" Width="1450" Background="#0A0A0A">
+        Title="Log Maverick v3" Height="850" Width="1450" Background="#0A0A0A">
     <Window.Resources>
         <h:CountToVisibilityConverter x:Key="CountToVis"/>
         <h:PauseColorConverter x:Key="PauseColorConverter"/>
@@ -49,15 +49,19 @@
                     </StackPanel>
                 </Button>
             </Border>
-            <Grid Grid.Row="1" Background="#161616" Padding="15,10">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Background="#0A0A0A" Foreground="White" BorderBrush="#333" Height="35" VerticalContentAlignment="Center" Padding="10,0"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
-                    <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="100" Height="35" Background="{Binding IsPaused, Converter={StaticResource PauseColorConverter}}" Foreground="White" Margin="0,0,5,0" FontWeight="Bold"/>
-                    <Button Content="EXPORT" Click="Export_Click" Width="80" Height="35" Background="#222" Foreground="White" Margin="0,0,5,0"/>
-                    <Button Content="CLEAR" Click="Clear_Click" Width="80" Height="35" Background="#222" Foreground="White"/>
-                </StackPanel>
-            </Grid>
+            <Border Grid.Row="1" Background="#161616" Padding="15,10">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Background="#0A0A0A" Foreground="White" BorderBrush="#333" Height="35" VerticalContentAlignment="Center" Padding="10,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                        <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="100" Height="35" 
+                                Background="{Binding IsPaused, Converter={StaticResource PauseColorConverter}}" 
+                                Foreground="White" Margin="0,0,5,0" FontWeight="Bold"/>
+                        <Button Content="EXPORT" Click="Export_Click" Width="80" Height="35" Background="#222" Foreground="White" Margin="0,0,5,0"/>
+                        <Button Content="CLEAR" Click="Clear_Click" Width="80" Height="35" Background="#222" Foreground="White"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
             <TabControl x:Name="MainTabs" Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="10">
                 <TabControl.Resources>
                     <ContextMenu x:Key="LogMenu">
