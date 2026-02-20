@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 using LogMaverick.Models;
 
@@ -17,11 +18,20 @@ namespace LogMaverick.Services {
                 _client.Connect();
                 _stream = _client.CreateShellStream("Mav", 0, 0, 0, 0, 1024);
                 _stream.DataReceived += (s, e) => {
-                    var lines = Encoding.UTF8.GetString(e.Data).Split('\n');
-                    foreach(var l in lines) {
-                        if(string.IsNullOrWhiteSpace(l)) continue;
-                        var entry = new LogEntry { Message = l.Trim() };
-                        if(l.Contains("ERROR")) { entry.Level="ERR"; entry.TextColor="#FF6347"; }
+                    var raw = Encoding.UTF8.GetString(e.Data);
+                    foreach(var line in raw.Split('\n')) {
+                        if(string.IsNullOrWhiteSpace(line) || line.Contains("tail")) continue;
+                        
+                        var entry = new LogEntry { Message = line.Trim() };
+                        try {
+                            // JSON 파싱 시도 (요구사항: 테이블 형식)
+                            var json = JObject.Parse(line);
+                            entry.Source = json["source"]?.ToString() ?? "SYS";
+                            entry.Tid = json["tid"]?.ToString() ?? "0000";
+                            entry.Message = json["msg"]?.ToString() ?? line;
+                        } catch { /* 일반 텍스트 로그 처리 */ }
+
+                        if(line.ToUpper().Contains("ERROR")) entry.TextColor = "#FF6347";
                         OnLogReceived?.Invoke(entry);
                     }
                 };
