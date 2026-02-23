@@ -37,34 +37,30 @@ namespace LogMaverick.ViewModels {
             _engine.OnLogReceived += (log) => {
                 if (IsPaused || ExcludedTids.Contains(log.Tid)) return;
                 Application.Current?.Dispatcher.Invoke(() => {
-                    if (!string.IsNullOrEmpty(FilterText) && !log.Message.Contains(FilterText)) return;
                     var target = log.Category?.ToUpper() switch {
                         "MACHINE" => MachineLogs, "DRIVER" => DriverLogs, "PROCESS" => ProcessLogs, _ => OtherLogs
                     };
                     target.Insert(0, log);
                     if (target.Count > 5000) target.RemoveAt(5000);
-                    if (log.Type != LogType.System) ErrorHistory.Insert(0, log);
+                    if (log.Type != LogType.System) { ErrorHistory.Insert(0, log); OnPropertyChanged(nameof(ErrorVisibility)); }
                 });
             };
             _engine.OnStatusChanged += (s) => StatusMessage = s;
-        }
-        public async Task ConnectAsync(ServerConfig s, string path) {
-            ClearAll();
-            await _engine.StartStreamingAsync(s, path);
-        }
-
-        public void ClearAll() {
-            MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear(); ErrorHistory.Clear();
-            OnPropertyChanged(nameof(ErrorVisibility));
         }
 
         public void ExportLogs(string tabName) {
             try {
                 var list = tabName == "MACHINE" ? MachineLogs : ProcessLogs;
                 string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"Log_{tabName}_{DateTime.Now:HHmmss}.txt");
-                File.WriteAllLines(path, list.Select(l => $"[{l.Time:HH:mm:ss}] {l.Message}"));
-                MessageBox.Show("저장 완료: " + path);
-            } catch (Exception ex) { MessageBox.Show("실패: " + ex.Message); }
+                File.WriteAllLines(path, list.Select(l => l.Message));
+                MessageBox.Show("Export Success: " + path);
+            } catch (Exception ex) { MessageBox.Show("Export Fail: " + ex.Message); }
+        }
+
+        public async Task ConnectAsync(ServerConfig s, string p) => await _engine.StartStreamingAsync(s, p);
+        public void ClearAll() { 
+            MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear(); ErrorHistory.Clear(); 
+            OnPropertyChanged(nameof(ErrorVisibility)); 
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
