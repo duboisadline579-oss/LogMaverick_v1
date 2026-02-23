@@ -12,17 +12,15 @@ using LogMaverick.Services;
 
 namespace LogMaverick.ViewModels {
     public class MainViewModel : INotifyPropertyChanged {
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
         private LogCoreEngine _engine = new LogCoreEngine();
         private string _statusMessage = "READY";
         private bool _isPaused = false;
         private ServerConfig _selectedServer;
         private string _filterText;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
         public ObservableCollection<ServerConfig> Servers { get; } = new ObservableCollection<ServerConfig>();
         public ObservableCollection<LogEntry> MachineLogs { get; } = new ObservableCollection<LogEntry>();
         public ObservableCollection<LogEntry> ProcessLogs { get; } = new ObservableCollection<LogEntry>();
@@ -68,14 +66,9 @@ namespace LogMaverick.ViewModels {
                 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Log_{tabName}_{DateTime.Now:HHmmss}.txt");
                 File.WriteAllLines(path, list.Select(l => $"[{l.Time:HH:mm:ss}] {l.Message}"));
                 StatusMessage = "EXPORTED TO DESKTOP";
-            } catch (Exception ex) { MessageBox.Show(ex.Message); }
+            } catch (Exception ex) { MessageBox.Show("Export Fail: " + ex.Message); }
         }
-
-        public async Task ConnectAsync(ServerConfig s, string p) {
-            ClearAll();
-            await _engine.StartStreamingAsync(s, p);
-        }
-
+        public async Task ConnectAsync(ServerConfig s, string p) { ClearAll(); await _engine.StartStreamingAsync(s, p); }
         public void ClearAll() {
             MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear(); ErrorHistory.Clear();
             OnPropertyChanged(nameof(ErrorVisibility));
