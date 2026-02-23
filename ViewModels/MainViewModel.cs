@@ -16,6 +16,7 @@ namespace LogMaverick.ViewModels {
         private string _statusMessage = "READY";
         private bool _isPaused = false;
         private ServerConfig _selectedServer;
+        private string _filterText;
 
         public ObservableCollection<ServerConfig> Servers { get; } = new ObservableCollection<ServerConfig>();
         public ObservableCollection<LogEntry> MachineLogs { get; } = new ObservableCollection<LogEntry>();
@@ -30,40 +31,31 @@ namespace LogMaverick.ViewModels {
         public bool IsPaused { get => _isPaused; set { _isPaused = value; OnPropertyChanged(); OnPropertyChanged(nameof(PauseStatusText)); } }
         public string PauseStatusText => IsPaused ? "RESUME" : "PAUSE";
         public Visibility ErrorVisibility => ErrorHistory.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        public string FilterText { get; set; }
+        public string FilterText { get => _filterText; set { _filterText = value; OnPropertyChanged(); } }
         public MainViewModel() {
             var saved = ConfigService.Load();
             if (saved != null) foreach(var s in saved) Servers.Add(s);
+            
             _engine.OnLogReceived += (log) => {
                 if (IsPaused || ExcludedTids.Contains(log.Tid)) return;
+                
                 Application.Current?.Dispatcher.Invoke(() => {
-                    var target = log.Category?.ToUpper() switch {
+                    // 필터 텍스트가 있으면 필터링
+                    if (!string.IsNullOrEmpty(FilterText) && !log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase)) return;
+
+                    var cat = log.Category?.ToUpper() ?? "OTHER";
+                    var target = cat switch {
                         "MACHINE" => MachineLogs, "DRIVER" => DriverLogs, "PROCESS" => ProcessLogs, _ => OtherLogs
                     };
+                    
                     target.Insert(0, log);
                     if (target.Count > 5000) target.RemoveAt(5000);
-                    if (log.Type != LogType.System) { ErrorHistory.Insert(0, log); OnPropertyChanged(nameof(ErrorVisibility)); }
+                    
+                    if (log.Type == LogType.Error || log.Type == LogType.Critical) {
+                        ErrorHistory.Insert(0, log);
+                        OnPropertyChanged(nameof(ErrorVisibility));
+                    }
                 });
             };
             _engine.OnStatusChanged += (s) => StatusMessage = s;
         }
-
-        public void ExportLogs(string tabName) {
-            try {
-                var list = tabName == "MACHINE" ? MachineLogs : ProcessLogs;
-                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"Log_{tabName}_{DateTime.Now:HHmmss}.txt");
-                File.WriteAllLines(path, list.Select(l => l.Message));
-                MessageBox.Show("Export Success: " + path);
-            } catch (Exception ex) { MessageBox.Show("Export Fail: " + ex.Message); }
-        }
-
-        public async Task ConnectAsync(ServerConfig s, string p) => await _engine.StartStreamingAsync(s, p);
-        public void ClearAll() { 
-            MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear(); ErrorHistory.Clear(); 
-            OnPropertyChanged(nameof(ErrorVisibility)); 
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string n = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
-    }
-}
