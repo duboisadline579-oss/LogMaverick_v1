@@ -18,6 +18,11 @@ namespace LogMaverick.ViewModels {
         private ServerConfig _selectedServer;
         private string _filterText;
 
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
         public ObservableCollection<ServerConfig> Servers { get; } = new ObservableCollection<ServerConfig>();
         public ObservableCollection<LogEntry> MachineLogs { get; } = new ObservableCollection<LogEntry>();
         public ObservableCollection<LogEntry> ProcessLogs { get; } = new ObservableCollection<LogEntry>();
@@ -38,19 +43,14 @@ namespace LogMaverick.ViewModels {
             
             _engine.OnLogReceived += (log) => {
                 if (IsPaused || ExcludedTids.Contains(log.Tid)) return;
-                
                 Application.Current?.Dispatcher.Invoke(() => {
-                    // 필터 텍스트가 있으면 필터링
                     if (!string.IsNullOrEmpty(FilterText) && !log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase)) return;
-
                     var cat = log.Category?.ToUpper() ?? "OTHER";
                     var target = cat switch {
                         "MACHINE" => MachineLogs, "DRIVER" => DriverLogs, "PROCESS" => ProcessLogs, _ => OtherLogs
                     };
-                    
                     target.Insert(0, log);
                     if (target.Count > 5000) target.RemoveAt(5000);
-                    
                     if (log.Type == LogType.Error || log.Type == LogType.Critical) {
                         ErrorHistory.Insert(0, log);
                         OnPropertyChanged(nameof(ErrorVisibility));
@@ -59,3 +59,26 @@ namespace LogMaverick.ViewModels {
             };
             _engine.OnStatusChanged += (s) => StatusMessage = s;
         }
+        public void ExportLogs(string tabName) {
+            try {
+                var list = tabName.ToUpper() switch {
+                    "MACHINE" => MachineLogs, "DRIVER" => DriverLogs, "PROCESS" => ProcessLogs, _ => OtherLogs
+                };
+                if (!list.Any()) return;
+                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Log_{tabName}_{DateTime.Now:HHmmss}.txt");
+                File.WriteAllLines(path, list.Select(l => $"[{l.Time:HH:mm:ss}] {l.Message}"));
+                StatusMessage = "EXPORTED TO DESKTOP";
+            } catch (Exception ex) { MessageBox.Show(ex.Message); }
+        }
+
+        public async Task ConnectAsync(ServerConfig s, string p) {
+            ClearAll();
+            await _engine.StartStreamingAsync(s, p);
+        }
+
+        public void ClearAll() {
+            MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear(); ErrorHistory.Clear();
+            OnPropertyChanged(nameof(ErrorVisibility));
+        }
+    }
+}
