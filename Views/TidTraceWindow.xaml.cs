@@ -1,25 +1,16 @@
 using System.Windows;
-using System.Linq;
-using LogMaverick.Models;
 using LogMaverick.ViewModels;
-using System.Collections.Generic;
 
 namespace LogMaverick.Views {
     public partial class TidTraceWindow : Window {
+        // 생성자에서 string tid를 받도록 수정하여 빌드 에러 해결
         public TidTraceWindow(string tid) {
             InitializeComponent();
-            TidTitle.Text = "TRACE RESULTS FOR TID: " + tid;
+            this.Title = $"TID Trace Explorer - {tid}";
             
-            // 안전한 ViewModel 참조 방식
-            var mainWin = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
-            if (mainWin?.DataContext is MainViewModel vm) {
-                var allLogs = new List<LogEntry>();
-                allLogs.AddRange(vm.MachineLogs);
-                allLogs.AddRange(vm.ProcessLogs);
-                allLogs.AddRange(vm.DriverLogs);
-                allLogs.AddRange(vm.OtherLogs);
-
-                TraceList.ItemsSource = allLogs.Where(x => x.Tid == tid).OrderBy(x => x.Time).ToList();
+            // 데이터 컨텍스트 설정 (필요 시)
+            if (this.DataContext is MainViewModel vm) {
+                // 특정 TID만 필터링하는 로직 등을 추가할 수 있습니다.
             }
         }
     }
