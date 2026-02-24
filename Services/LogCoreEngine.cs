@@ -19,6 +19,8 @@ namespace LogMaverick.Services {
         public event Action<LogEntry>? OnLogReceived;
         public event Action<string>? OnStatusChanged;
         private readonly Regex _tidRegex = new Regex(@"(?i)(?:TID[:\s-]*|\[|ID:)(\d+)", RegexOptions.Compiled);
+        private static readonly Regex _timeRegex = new Regex(@"(\d{4}[\/-]\d{2}[\/-]\d{2}[T ]\d{2}:\d{2}:\d{2})", RegexOptions.Compiled);
+        private static readonly Regex _jsonTidRegex = new Regex(@"""[Tt]id""\s*:\s*""?([\w\d]+)""?", RegexOptions.Compiled);
 
         public StreamSession(string category, string filePath) {
             Category = category; FilePath = filePath;
