@@ -44,7 +44,7 @@ namespace LogMaverick.Views {
         }
         private void ExportAll_Click(object sender, RoutedEventArgs e) => VM.ExportAll();
         private void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            if (MainTabs.SelectedItem is TabItem tab) VM.ResetTab(tab.Header.ToString());
+            if (MainTabs.SelectedItem is TabItem tab && tab.Header != null) VM.ResetTab(tab.Header.ToString());
         }
         private void Log_DoubleClick(object sender, RoutedEventArgs e) {
             if ((sender as ListView)?.SelectedItem is LogEntry log)
