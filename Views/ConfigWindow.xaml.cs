@@ -37,7 +37,9 @@ namespace LogMaverick.Views {
                 var s2 = new ServerConfig { Alias = TxtAlias.Text, Host = TxtHost.Text, Port = int.TryParse(TxtPort.Text, out int p) ? p : 22, Username = TxtUser.Text, Password = TxtPass.Password, RootPath = TxtPath.Text };
                 _servers.Add(s2);
             }
-            ConfigService.Save(_servers.ToList()); this.Close();
+            var settings = ConfigService.Load();
+            settings.Servers = _servers.ToList();
+            ConfigService.Save(settings); this.Close();
         }
     }
 }

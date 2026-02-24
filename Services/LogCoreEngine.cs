@@ -7,20 +7,86 @@ using Renci.SshNet;
 using LogMaverick.Models;
 
 namespace LogMaverick.Services {
-    public class LogCoreEngine : IDisposable {
+    public class StreamSession : IDisposable {
+        public string Category { get; }
+        public string FilePath { get; }
         private SshClient? _client;
         private ShellStream? _stream;
         private CancellationTokenSource? _cts;
-        private bool _isConnecting = false;
-        public bool IsConnected => _client?.IsConnected ?? false;
+        private bool _autoReconnect = true;
+        private int _reconnectAttempts = 0;
+        private const int MaxRetry = 5;
         public event Action<LogEntry>? OnLogReceived;
         public event Action<string>? OnStatusChanged;
         private readonly Regex _tidRegex = new Regex(@"(?i)(?:TID[:\s-]*|\[|ID:)(\d+)", RegexOptions.Compiled);
 
-        private string ExtractTid(string message) {
-            var match = _tidRegex.Match(message);
-            return match.Success ? match.Groups[1].Value : "0000";
+        public StreamSession(string category, string filePath) {
+            Category = category; FilePath = filePath;
         }
+        private string ExtractTid(string msg) {
+            var m = _tidRegex.Match(msg);
+            return m.Success ? m.Groups[1].Value : "0000";
+        }
+        public async Task StartAsync(ServerConfig config) {
+            _autoReconnect = true; _reconnectAttempts = 0;
+            await ConnectAsync(config);
+        }
+        private async Task ConnectAsync(ServerConfig config) {
+            _cts = new CancellationTokenSource();
+            await Task.Run(async () => {
+                try {
+                    _client = new SshClient(config.Host, config.Port, config.Username, config.Password);
+                    _client.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                    _client.Connect();
+                    if (!_client.IsConnected) throw new Exception("SSH 연결 실패");
+                    _reconnectAttempts = 0;
+                    OnStatusChanged?.Invoke($"✅ [{Category}] 연결됨: {FilePath}");
+                    _stream = _client.CreateShellStream("log", 0, 0, 0, 0, 4096);
+                    _stream.WriteLine($"tail -n 100 -F {FilePath}");
+                    while (!_cts.Token.IsCancellationRequested) {
+                        if (_client?.IsConnected != true) {
+                            OnStatusChanged?.Invoke($"⚠ [{Category}] 연결 끊김. 재연결 시도...");
+                            break;
+                        }
+                        if (_stream.DataAvailable) ProcessData(_stream.Read());
+                        Thread.Sleep(50);
+                    }
+                    if (_autoReconnect && !_cts.Token.IsCancellationRequested && _reconnectAttempts < MaxRetry) {
+                        _reconnectAttempts++;
+                        await Task.Delay(3000);
+                        await ConnectAsync(config);
+                    } else if (_reconnectAttempts >= MaxRetry) {
+                        OnStatusChanged?.Invoke($"❌ [{Category}] 재연결 실패");
+                    }
+                } catch (Exception ex) {
+                    if (_autoReconnect && _reconnectAttempts < MaxRetry) {
+                        _reconnectAttempts++;
+                        OnStatusChanged?.Invoke($"❌ [{Category}] {ex.Message} 재연결 {_reconnectAttempts}/{MaxRetry}");
+                        await Task.Delay(3000);
+                        await ConnectAsync(config);
+                    } else {
+                        OnStatusChanged?.Invoke($"❌ [{Category}] 연결 실패: {ex.Message}");
+                    }
+                }
+            }, _cts.Token);
+        }
+        private void ProcessData(string data) {
+            foreach (var line in data.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
+                if (string.IsNullOrWhiteSpace(line) || line.Contains("tail -n")) continue;
+                string up = line.ToUpper();
+                LogType type = up.Contains("ERROR") || up.Contains("FAIL") ? LogType.Error :
+                    up.Contains("EXCEPTION") ? LogType.Exception :
+                    up.Contains("CRITICAL") || up.Contains("FATAL") ? LogType.Critical : LogType.System;
+                OnLogReceived?.Invoke(new LogEntry { Time = DateTime.Now, Message = line.Trim(), Category = Category, Type = type, Tid = ExtractTid(line) });
+            }
+        }
+        public void Dispose() { _autoReconnect = false; _cts?.Cancel(); _stream?.Dispose(); _client?.Disconnect(); _client?.Dispose(); }
+    }
+    public class LogCoreEngine : IDisposable {
+        private readonly Dictionary<string, StreamSession> _sessions = new();
+        public event Action<LogEntry>? OnLogReceived;
+        public event Action<string>? OnStatusChanged;
+
         public List<FileNode> GetFileTree(ServerConfig config) {
             var nodes = new List<FileNode>();
             try {
@@ -32,42 +98,18 @@ namespace LogMaverick.Services {
             } catch (Exception ex) { OnStatusChanged?.Invoke("❌ Tree Error: " + ex.Message); }
             return nodes;
         }
-        public async Task StartStreamingAsync(ServerConfig config, string filePath) {
-            if (_isConnecting) { OnStatusChanged?.Invoke("⚠ 이미 연결 시도 중입니다"); return; }
-            if (_client?.IsConnected == true) Dispose();
-            _isConnecting = true;
-            _cts = new CancellationTokenSource();
-            await Task.Run(() => {
-                try {
-                    _client = new SshClient(config.Host, config.Port, config.Username, config.Password);
-                    _client.KeepAliveInterval = TimeSpan.FromSeconds(30);
-                    _client.Connect();
-                    if (!_client.IsConnected) throw new Exception("SSH 연결 실패 — Host/Port/계정 정보를 확인하세요");
-                    OnStatusChanged?.Invoke($"✅ 연결됨: {config.Alias} ({config.Host})");
-                    _stream = _client.CreateShellStream("LogStream", 0, 0, 0, 0, 4096);
-                    _stream.WriteLine($"tail -n 100 -F {filePath}");
-                    _isConnecting = false;
-                    while (_client.IsConnected && !_cts.Token.IsCancellationRequested) {
-                        if (_stream.DataAvailable) ProcessRawData(_stream.Read(), filePath);
-                        Thread.Sleep(50);
-                    }
-                    OnStatusChanged?.Invoke("🔌 연결 종료됨");
-                } catch (Exception ex) {
-                    _isConnecting = false;
-                    OnStatusChanged?.Invoke("❌ 연결 실패: " + ex.Message);
-                }
-            }, _cts.Token);
+        public async Task StartSessionAsync(ServerConfig config, string category, string filePath) {
+            if (_sessions.TryGetValue(category, out var existing)) { existing.Dispose(); _sessions.Remove(category); }
+            var session = new StreamSession(category, filePath);
+            session.OnLogReceived += (log) => OnLogReceived?.Invoke(log);
+            session.OnStatusChanged += (s) => OnStatusChanged?.Invoke(s);
+            _sessions[category] = session;
+            await session.StartAsync(config);
         }
-        private void ProcessRawData(string data, string filePath) {
-            var lines = data.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines) {
-                if (string.IsNullOrWhiteSpace(line) || line.Contains("tail -n")) continue;
-                string up = line.ToUpper();
-                LogType type = up.Contains("ERROR") || up.Contains("FAIL") ? LogType.Error : (up.Contains("EXCEPTION") ? LogType.Exception : LogType.System);
-                string cat = filePath.ToLower().Contains("machine") ? "MACHINE" : (filePath.ToLower().Contains("process") ? "PROCESS" : (filePath.ToLower().Contains("driver") ? "DRIVER" : "OTHERS"));
-                OnLogReceived?.Invoke(new LogEntry { Time = DateTime.Now, Message = line.Trim(), Category = cat, Type = type, Tid = ExtractTid(line) });
-            }
+        public void StopSession(string category) {
+            if (_sessions.TryGetValue(category, out var s)) { s.Dispose(); _sessions.Remove(category); }
         }
-        public void Dispose() { _cts?.Cancel(); _stream?.Dispose(); _client?.Disconnect(); _client?.Dispose(); _isConnecting = false; }
+        public bool HasSession(string category) => _sessions.ContainsKey(category);
+        public void Dispose() { foreach (var s in _sessions.Values) s.Dispose(); _sessions.Clear(); }
     }
 }

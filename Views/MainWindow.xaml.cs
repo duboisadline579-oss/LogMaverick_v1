@@ -36,7 +36,7 @@ namespace LogMaverick.Views {
                 VM.StatusMessage = "✅ 파일 목록 로드 완료 — 파일 선택 후 CONNECT 하세요";
             } catch (Exception ex) { VM.StatusMessage = "❌ 트리 로드 실패: " + ex.Message; }
         }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => VM.Disconnect();
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) { VM.SaveSettings(); VM.Disconnect(); }
         private void Pause_Click(object sender, RoutedEventArgs e) => VM.IsPaused = !VM.IsPaused;
         private void Clear_Click(object sender, RoutedEventArgs e) => VM.ClearAll();
         private void Export_Click(object sender, RoutedEventArgs e) {
@@ -63,9 +63,22 @@ namespace LogMaverick.Views {
                 lv.ScrollIntoView(lv.Items[0]);
         }
         private void File_DoubleClick(object sender, MouseButtonEventArgs e) => Connect_Click(null, null);
+        private async void Tab_RightClick(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버를 먼저 선택하세요"; return; }
+            var tab = MainTabs.SelectedItem as TabItem;
+            if (tab == null) return;
+            string cat = tab.Tag?.ToString() ?? "MACHINE";
+            var menu = new ContextMenu();
+            var i1 = new MenuItem { Header = $"📂 {cat} 파일 지정" };
+            i1.Click += async (s, ev) => { if (FileTree.SelectedItem is FileNode node) await VM.ConnectSessionAsync(VM.SelectedServer, cat, node.FullPath); else VM.StatusMessage = "⚠ 파일을 먼저 선택하세요"; };
+            var i2 = new MenuItem { Header = $"⏹ {cat} 연결 해제" };
+            i2.Click += (s, ev) => VM.StopSession(cat);
+            menu.Items.Add(i1); menu.Items.Add(i2); menu.IsOpen = true;
+        }
         private void ErrorBox_Click(object sender, RoutedEventArgs e) {
             VM.ResetErrors();
             new ErrorWindow(VM.ErrorHistory) { Owner = this }.Show();
         }
     }
 }
+    // append
