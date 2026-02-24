@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace LogMaverick.Models {
-    public enum LogType { System, Error, Exception }
+    public enum LogType { System, Error, Exception, Critical }
     
     public class ServerConfig : INotifyPropertyChanged {
         public string Id { get; set; } = Guid.NewGuid().ToString();

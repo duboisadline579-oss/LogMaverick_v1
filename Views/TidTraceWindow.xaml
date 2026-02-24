@@ -1,6 +1,6 @@
 <Window x:Class="LogMaverick.Views.TidTraceWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="TID Trace View" Height="600" Width="900" Background="#050505">
 <Grid Margin="10">
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <TextBlock x:Name="TidTitle" Foreground="#007AFF" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
     <ListView Grid.Row="1" x:Name="TraceList" Background="Transparent" Foreground="#DCDCDC" BorderThickness="0">
         <ListView.View><GridView>
@@ -9,4 +9,8 @@
             <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="630"/>
         </GridView></ListView.View>
     </ListView>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+        <Button Content="COPY ALL" Click="Copy_Click" Width="100" Height="30" Background="#222" Foreground="White" Margin="5"/>
+        <Button Content="CLOSE" Click="Close_Click" Width="80" Height="30" Background="#007AFF" Foreground="White" Margin="5"/>
+    </StackPanel>
 </Grid></Window>
