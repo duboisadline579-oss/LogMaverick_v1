@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
-
 using WinApp = System.Windows.Application;
 using System.IO;
 using System.Linq;
@@ -19,13 +18,12 @@ namespace LogMaverick.ViewModels {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         private LogCoreEngine _engine = new LogCoreEngine();
-        private string _statusMessage = "⚙ 서버를 선택하고 🔄 버튼으로 파일 목록을 불러오세요";
-        private bool _isPaused, _isConnected;
+        private string _statusMessage = "▶ CONNECT 버튼을 눌러 서버에 연결하세요";
+        private bool _isPaused, _isConnected, _isLoading;
         private string _connectedFile = "", _filterText;
         private ServerConfig _selectedServer;
         private int _newMachine, _newProcess, _newDriver, _newOther, _newErrors;
         public Dictionary<string, string> SessionFiles { get; } = new();
-
         public ObservableCollection<ServerConfig> Servers { get; } = new();
         public ObservableCollection<LogEntry> MachineLogs { get; } = new();
         public ObservableCollection<LogEntry> ProcessLogs { get; } = new();
@@ -38,13 +36,15 @@ namespace LogMaverick.ViewModels {
         public string StatusMessage { get => _statusMessage; set { _statusMessage = value; OnPropertyChanged(); } }
         public bool IsPaused { get => _isPaused; set { _isPaused = value; OnPropertyChanged(); OnPropertyChanged(nameof(PauseStatusText)); } }
         public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(); OnPropertyChanged(nameof(ConnectionStatusText)); OnPropertyChanged(nameof(ConnectionStatusColor)); OnPropertyChanged(nameof(ConnectButtonText)); OnPropertyChanged(nameof(ConnectButtonColor)); } }
+        public bool IsLoading { get => _isLoading; set { _isLoading = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotLoading)); OnPropertyChanged(nameof(ConnectButtonText)); } }
+        public bool IsNotLoading => !_isLoading;
         public string ConnectedFile { get => _connectedFile; set { _connectedFile = value; OnPropertyChanged(); } }
         public string FilterText { get => _filterText; set { _filterText = value; OnPropertyChanged(); ApplyFilter(); } }
         public string PauseStatusText => IsPaused ? "▶ RESUME" : "⏸ PAUSE";
-        public string ConnectButtonText => IsConnected ? "⏹  DISCONNECT" : "▶  CONNECT";
-        public string ConnectButtonColor => IsConnected ? "#FF4500" : "#007AFF";
-        public string ConnectionStatusText => IsConnected ? "● CONNECTED" : "○ DISCONNECTED";
-        public string ConnectionStatusColor => IsConnected ? "#00C853" : "#666666";
+        public string ConnectButtonText => IsLoading ? "⏳ 로딩 중..." : IsConnected ? "⏹  DISCONNECT" : "▶  CONNECT";
+        public string ConnectButtonColor => IsLoading ? "#888888" : IsConnected ? "#FF4500" : "#007AFF";
+        public string ConnectionStatusText => IsConnected ? "● CONNECTED" : IsLoading ? "⏳ 연결 중..." : "○ DISCONNECTED";
+        public string ConnectionStatusColor => IsConnected ? "#00C853" : IsLoading ? "#FFD700" : "#666666";
         public Visibility ErrorVisibility => ErrorHistory.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         public int NewMachine { get => _newMachine; set { _newMachine = value; OnPropertyChanged(); OnPropertyChanged(nameof(MachineTab)); OnPropertyChanged(nameof(MachineFlash)); } }
         public int NewProcess { get => _newProcess; set { _newProcess = value; OnPropertyChanged(); OnPropertyChanged(nameof(ProcessTab)); OnPropertyChanged(nameof(ProcessFlash)); } }
@@ -56,10 +56,10 @@ namespace LogMaverick.ViewModels {
         public string DriverTab => _newDriver > 0 ? $"🔧 DRIVER ({_newDriver})" : "🔧 DRIVER";
         public string OtherTab => _newOther > 0 ? $"📋 OTHERS ({_newOther})" : "📋 OTHERS";
         public string ErrorFlash => _newErrors > 0 ? "#FF2222" : "#440000";
-        public string MachineFlash => _newMachine > 0 ? "#007AFF" : "#161616";
-        public string ProcessFlash => _newProcess > 0 ? "#007AFF" : "#161616";
-        public string DriverFlash => _newDriver > 0 ? "#007AFF" : "#161616";
-        public string OtherFlash => _newOther > 0 ? "#007AFF" : "#161616";
+        public string MachineFlash => _newMachine > 0 ? "#1A3A6A" : "Transparent";
+        public string ProcessFlash => _newProcess > 0 ? "#1A3A6A" : "Transparent";
+        public string DriverFlash => _newDriver > 0 ? "#1A3A6A" : "Transparent";
+        public string OtherFlash => _newOther > 0 ? "#1A3A6A" : "Transparent";
         public MainViewModel() {
             var settings = ConfigService.Load();
             foreach(var s in settings.Servers) Servers.Add(s);
@@ -86,16 +86,13 @@ namespace LogMaverick.ViewModels {
                         NewErrors++; OnPropertyChanged(nameof(ErrorVisibility));
                     }
                     if (AlertKeywords.Any(k => log.Message.Contains(k, StringComparison.OrdinalIgnoreCase)))
-                        ShowAlert(log);
+                        StatusMessage = $"🔔 알림: [{log.Category}] {log.Message.Substring(0, Math.Min(60, log.Message.Length))}";
                 });
             };
             _engine.OnStatusChanged += (s) => WinApp.Current?.Dispatcher.InvokeAsync(() => {
-                StatusMessage = s; IsConnected = _engine.HasSession("MACHINE") || _engine.HasSession("PROCESS") || _engine.HasSession("DRIVER") || _engine.HasSession("OTHERS");
-            });
-        }
-        private void ShowAlert(LogEntry log) {
-            System.Windows.Application.Current?.Dispatcher.InvokeAsync(() => {
-                System.Windows.MessageBox.Show($"[{log.Category}] {log.Message.Substring(0, Math.Min(80, log.Message.Length))}", "⚠ LogMaverick 알림", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                StatusMessage = s;
+                if (s.StartsWith("✅")) { IsConnected = true; IsLoading = false; }
+                else if (s.StartsWith("❌") || s.StartsWith("🔌")) { IsConnected = false; IsLoading = false; }
             });
         }
         private void ApplyFilter() {
@@ -104,11 +101,20 @@ namespace LogMaverick.ViewModels {
         }
         public async Task ConnectSessionAsync(ServerConfig config, string category, string filePath) {
             SessionFiles[category] = filePath;
+            IsConnected = true;
             await _engine.StartSessionAsync(config, category, filePath);
         }
-        public void StopSession(string category) { _engine.StopSession(category); SessionFiles.Remove(category); }
-        public async Task ConnectAsync(ServerConfig s, string p) { ClearAll(); ConnectedFile = p; await _engine.StartSessionAsync(s, "MACHINE", p); }
-        public void Disconnect() { _engine.Dispose(); IsConnected = false; ConnectedFile = ""; SessionFiles.Clear(); StatusMessage = "🔌 연결 해제됨"; }
+        public void StopSession(string category) {
+            _engine.StopSession(category); SessionFiles.Remove(category);
+            IsConnected = _engine.HasSession("MACHINE") || _engine.HasSession("PROCESS") || _engine.HasSession("DRIVER") || _engine.HasSession("OTHERS");
+        }
+        public async Task ConnectAsync(ServerConfig s, string p) {
+            ClearAll(); ConnectedFile = p;
+            string cat = p.ToLower().Contains("machine") ? "MACHINE" : p.ToLower().Contains("process") ? "PROCESS" : p.ToLower().Contains("driver") ? "DRIVER" : "OTHERS";
+            IsConnected = true;
+            await _engine.StartSessionAsync(s, cat, p);
+        }
+        public void Disconnect() { _engine.Dispose(); IsConnected = false; IsLoading = false; ConnectedFile = ""; SessionFiles.Clear(); StatusMessage = "🔌 연결 해제됨"; }
         public void ExportLogs(string tab) {
             try {
                 var list = tab.Contains("MACHINE") ? MachineLogs : tab.Contains("PROCESS") ? ProcessLogs : tab.Contains("DRIVER") ? DriverLogs : OtherLogs;
@@ -134,12 +140,7 @@ namespace LogMaverick.ViewModels {
         }
         public void ResetErrors() => NewErrors = 0;
         public void SaveSettings() {
-            var settings = new AppSettings {
-                Servers = Servers.ToList(),
-                ExcludedTids = ExcludedTids.ToList(),
-                AlertKeywords = AlertKeywords.ToList()
-            };
-            ConfigService.Save(settings);
+            ConfigService.Save(new AppSettings { Servers = Servers.ToList(), ExcludedTids = ExcludedTids.ToList(), AlertKeywords = AlertKeywords.ToList() });
         }
         public void ClearAll() {
             MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear(); ErrorHistory.Clear();

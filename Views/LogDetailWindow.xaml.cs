@@ -1,70 +1,76 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Windows;
-using System.Xml;
-using Newtonsoft.Json;
+using System.Windows.Controls;
+using System.Windows.Media;
 using Newtonsoft.Json.Linq;
 using LogMaverick.Models;
 
 namespace LogMaverick.Views {
+    public class KvItem {
+        public string Key { get; set; }
+        public string Value { get; set; }
+        public string KeyColor { get; set; } = "#00BFFF";
+        public string ValueColor { get; set; } = "#DDDDDD";
+    }
     public partial class LogDetailWindow : Window {
         private LogEntry _log;
+        private List<KvItem> _allItems = new();
         public LogDetailWindow(LogEntry log) {
             InitializeComponent();
             _log = log;
-            TxtHeader.Text = $"[{log.Time:yyyy-MM-dd HH:mm:ss}]  TID: {log.Tid}  CAT: {log.Category}";
+            TxtHeader.Text = $"[{log.Time:yyyy-MM-dd HH:mm:ss}] TID:{log.Tid} CAT:{log.Category}";
             TxtType.Text = $"TYPE: {log.Type}";
             TxtType.Foreground = log.Type switch {
-                LogType.Error => System.Windows.Media.Brushes.OrangeRed,
-                LogType.Exception => System.Windows.Media.Brushes.Violet,
-                LogType.Critical => System.Windows.Media.Brushes.Red,
-                _ => System.Windows.Media.Brushes.LightGreen
+                LogType.Error => Brushes.OrangeRed,
+                LogType.Exception => Brushes.Violet,
+                LogType.Critical => Brushes.Red,
+                _ => Brushes.LightGreen
             };
-            TxtRaw.Text = log.Message;
             ParseAndDisplay(log.Message);
         }
         private void ParseAndDisplay(string message) {
-            // JSON 파싱 시도
+            _allItems.Clear();
             try {
                 var token = JToken.Parse(message);
-                TxtPretty.Text = token.ToString(Newtonsoft.Json.Formatting.Indented);
                 if (token is JObject obj) {
-                    var items = new List<KvItem>();
                     foreach (var p in obj.Properties()) {
+                        string key = p.Name;
                         string val = p.Value.ToString();
-                        if (p.Value.Type == JTokenType.String && (val.TrimStart().StartsWith("<") || val.TrimStart().StartsWith("{")))
-                            val = TryPrettyXml(val) ?? TryPrettyJson(val) ?? val;
-                        items.Add(new KvItem { Key = p.Name, Value = val });
+                        string kColor = key.ToLower() == "tid" ? "#FFD700" :
+                            key.ToLower().Contains("error") ? "#FF6B6B" : "#00BFFF";
+                        string vColor = val.ToUpper().Contains("ERROR") ? "#FF6B6B" :
+                            val.ToUpper().Contains("OK") || val.ToUpper().Contains("SUCCESS") ? "#00C853" : "#DDDDDD";
+                        _allItems.Add(new KvItem { Key = key, Value = val, KeyColor = kColor, ValueColor = vColor });
                     }
-                    KvList.ItemsSource = items;
+                } else { _allItems.Add(new KvItem { Key = "value", Value = token.ToString() }); }
+            } catch {
+                foreach (var part in message.Split(new[] { ' ', '|', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
+                    var kv = part.Split('=');
+                    if (kv.Length == 2) _allItems.Add(new KvItem { Key = kv[0].Trim(), Value = kv[1].Trim() });
+                    else _allItems.Add(new KvItem { Key = "raw", Value = part.Trim() });
                 }
-                return;
-            } catch { }
-            // XML 파싱 시도
-            try {
-                TxtPretty.Text = TryPrettyXml(message) ?? message;
-                return;
-            } catch { }
-            TxtPretty.Text = message;
+            }
+            KvList.ItemsSource = _allItems;
+            TxtMatchCount.Text = $"{_allItems.Count}개";
         }
-        private string TryPrettyXml(string xml) {
-            try {
-                var doc = new XmlDocument();
-                doc.LoadXml(xml);
-                var sb = new StringBuilder();
-                var settings = new XmlWriterSettings { Indent = true, IndentChars = "  " };
-                using var writer = XmlWriter.Create(sb, settings);
-                doc.Save(writer);
-                return sb.ToString();
-            } catch { return null; }
-        }
-        private string TryPrettyJson(string json) {
-            try { return JToken.Parse(json).ToString(Newtonsoft.Json.Formatting.Indented); }
-            catch { return null; }
+        private void Search_Changed(object sender, TextChangedEventArgs e) {
+            string q = TxtSearch.Text.Trim();
+            SearchHint.Visibility = string.IsNullOrEmpty(q) ? Visibility.Visible : Visibility.Collapsed;
+            if (string.IsNullOrEmpty(q)) {
+                KvList.ItemsSource = null; KvList.ItemsSource = _allItems;
+                TxtMatchCount.Text = $"{_allItems.Count}개"; return;
+            }
+            var matched = _allItems.Where(i =>
+                i.Key.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                i.Value.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var i in matched) i.ValueColor = "#FFD700";
+            KvList.ItemsSource = null; KvList.ItemsSource = matched;
+            TxtMatchCount.Text = $"{matched.Count}개 매칭";
+            if (matched.Any()) KvList.ScrollIntoView(matched.First());
         }
         private void Copy_Click(object sender, RoutedEventArgs e) => Clipboard.SetText(_log.Message);
         private void Close_Click(object sender, RoutedEventArgs e) => this.Close();
     }
-    public class KvItem { public string Key { get; set; } public string Value { get; set; } }
 }

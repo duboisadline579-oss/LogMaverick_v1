@@ -1,28 +1,61 @@
-<Window x:Class="LogMaverick.Views.ConfigWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="서버 설정" Height="520" Width="620" Background="#111" WindowStartupLocation="CenterOwner">
-<Grid Margin="20">
-    <Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <TextBlock Text="서버 목록" Foreground="#555" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-    <ListBox x:Name="SrvList" Grid.Row="1" Background="#1A1A1A" Foreground="White" BorderBrush="#333" BorderThickness="1" DisplayMemberPath="Alias" SelectionChanged="SrvList_SelectionChanged"/>
-    
-    <StackPanel Grid.Column="1" Grid.RowSpan="3" Margin="15,0,0,0">
-        <TextBlock Text="서버 정보 입력" Foreground="#007AFF" FontSize="13" FontWeight="Bold" Margin="0,0,0,15"/>
-        <TextBlock Text="Alias (서버 별칭)" Foreground="#888" FontSize="11"/>
-        <TextBox x:Name="TxtAlias" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,10" Padding="8,5" ToolTip="예: MyServer-01"/>
-        <TextBlock Text="Host (IP 주소)" Foreground="#888" FontSize="11"/>
-        <TextBox x:Name="TxtHost" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,10" Padding="8,5" ToolTip="예: 192.168.1.100"/>
-        <TextBlock Text="Port (SSH 포트, 기본값: 22)" Foreground="#888" FontSize="11"/>
-        <TextBox x:Name="TxtPort" Text="22" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,10" Padding="8,5" ToolTip="기본 SSH 포트는 22입니다"/>
-        <TextBlock Text="Username" Foreground="#888" FontSize="11"/>
-        <TextBox x:Name="TxtUser" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,10" Padding="8,5" ToolTip="예: root 또는 admin"/>
-        <TextBlock Text="Password" Foreground="#888" FontSize="11"/>
-        <PasswordBox x:Name="TxtPass" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,10" Padding="8,5"/>
-        <TextBlock Text="Root Path (로그 경로)" Foreground="#888" FontSize="11"/>
-        <TextBox x:Name="TxtPath" Text="/var/log" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,10" Padding="8,5" ToolTip="예: /var/log 또는 /home/user/logs"/>
-        <TextBlock Text="※ REFRESH 버튼으로 해당 경로의 .log 파일 목록을 불러옵니다" Foreground="#555" FontSize="10" TextWrapping="Wrap" Margin="0,5,0,15"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="BtnDel" Content="DELETE" Click="Del_Click" Width="80" Height="30" Background="#1A1A1A" Foreground="#FF4500" BorderBrush="#FF4500" BorderThickness="1" Margin="0,0,8,0" IsEnabled="False"/>
-            <Button Content="SAVE" Click="Save_Click" Width="80" Height="30" Background="#007AFF" Foreground="White" BorderThickness="0"/>
-        </StackPanel>
-    </StackPanel>
-</Grid></Window>
+<Window x:Class="LogMaverick.Views.ConfigWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="설정" Height="560" Width="680" Background="#111" WindowStartupLocation="CenterOwner">
+<Grid Margin="15">
+    <TabControl Background="Transparent" BorderThickness="0">
+        <TabControl.Resources>
+            <Style TargetType="TabItem">
+                <Setter Property="Foreground" Value="#888"/>
+                <Setter Property="Background" Value="#1A1A1A"/>
+                <Setter Property="Padding" Value="14,6"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                        <Setter Property="Background" Value="#007AFF"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </TabControl.Resources>
+        <TabItem Header="⚙ 서버 설정">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <TextBlock Text="서버 목록" Foreground="#555" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                <ListBox x:Name="SrvList" Grid.Row="1" Background="#1A1A1A" Foreground="White" BorderBrush="#333" BorderThickness="1" DisplayMemberPath="Alias" SelectionChanged="SrvList_SelectionChanged"/>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="+ NEW" Click="New_Click" Width="70" Height="28" Background="#2A2A2A" Foreground="#CCCCCC" BorderBrush="#444"/>
+                    <Button x:Name="BtnDel" Content="DELETE" Click="Del_Click" Width="70" Height="28" Background="#1A1A1A" Foreground="#FF4500" BorderBrush="#FF4500" BorderThickness="1" Margin="5,0,0,0" IsEnabled="False"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Grid.RowSpan="3" Margin="15,0,0,0">
+                    <TextBlock Text="서버 정보" Foreground="#007AFF" FontSize="13" FontWeight="Bold" Margin="0,0,0,12"/>
+                    <TextBlock Text="Alias" Foreground="#888" FontSize="11"/>
+                    <TextBox x:Name="TxtAlias" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,8" Padding="8,5"/>
+                    <TextBlock Text="Host" Foreground="#888" FontSize="11"/>
+                    <TextBox x:Name="TxtHost" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,8" Padding="8,5"/>
+                    <TextBlock Text="Port" Foreground="#888" FontSize="11"/>
+                    <TextBox x:Name="TxtPort" Text="22" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,8" Padding="8,5"/>
+                    <TextBlock Text="Username" Foreground="#888" FontSize="11"/>
+                    <TextBox x:Name="TxtUser" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,8" Padding="8,5"/>
+                    <TextBlock Text="Password" Foreground="#888" FontSize="11"/>
+                    <PasswordBox x:Name="TxtPass" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,8" Padding="8,5"/>
+                    <TextBlock Text="Root Path" Foreground="#888" FontSize="11"/>
+                    <TextBox x:Name="TxtPath" Text="/var/log" Background="#1A1A1A" Foreground="White" BorderBrush="#333" Margin="0,3,0,12" Padding="8,5"/>
+                    <Button Content="SAVE" Click="Save_Click" Width="80" Height="30" Background="#007AFF" Foreground="White" BorderThickness="0" HorizontalAlignment="Right"/>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+        <TabItem Header="🔔 알림 키워드">
+            <Grid Margin="10">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <TextBlock Text="EXCEPTIONS 강조 및 알림에 사용할 키워드 목록" Foreground="#888" FontSize="11" Margin="0,0,0,8"/>
+                <ListBox x:Name="KeywordList" Grid.Row="1" Background="#1A1A1A" Foreground="White" BorderBrush="#333" BorderThickness="1"/>
+                <Grid Grid.Row="2" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBox x:Name="TxtKeyword" Background="#1A1A1A" Foreground="White" BorderBrush="#333" BorderThickness="1" Padding="8,5" ToolTip="예: CRITICAL, FATAL, OOM"/>
+                    <Button Grid.Column="1" Content="+ ADD" Click="AddKeyword_Click" Width="70" Height="30" Background="#007AFF" Foreground="White" BorderThickness="0" Margin="5,0"/>
+                    <Button Grid.Column="2" Content="DELETE" Click="DelKeyword_Click" Width="70" Height="30" Background="#1A1A1A" Foreground="#FF4500" BorderBrush="#FF4500" BorderThickness="1"/>
+                </Grid>
+            </Grid>
+        </TabItem>
+    </TabControl>
+</Grid>
+</Window>

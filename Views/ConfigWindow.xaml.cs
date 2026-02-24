@@ -8,16 +8,20 @@ using System.Linq;
 namespace LogMaverick.Views {
     public partial class ConfigWindow : Window {
         private ObservableCollection<ServerConfig> _servers;
-        public ConfigWindow(ObservableCollection<ServerConfig> servers) {
+        private ObservableCollection<string> _keywords;
+        public ConfigWindow(ObservableCollection<ServerConfig> servers, ObservableCollection<string> keywords = null) {
             InitializeComponent();
             _servers = servers;
+            _keywords = keywords ?? new ObservableCollection<string>();
             SrvList.ItemsSource = _servers;
+            KeywordList.ItemsSource = _keywords;
         }
         private void SrvList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             if (SrvList.SelectedItem is ServerConfig s) {
                 TxtAlias.Text = s.Alias; TxtHost.Text = s.Host;
                 TxtPort.Text = s.Port.ToString(); TxtUser.Text = s.Username;
-                TxtPath.Text = s.RootPath; BtnDel.IsEnabled = true;
+                TxtPass.Password = s.Password; TxtPath.Text = s.RootPath;
+                BtnDel.IsEnabled = true;
             }
         }
         private void New_Click(object sender, RoutedEventArgs e) {
@@ -33,13 +37,20 @@ namespace LogMaverick.Views {
                 s.Port = int.TryParse(TxtPort.Text, out int p) ? p : 22;
                 s.Username = TxtUser.Text; s.Password = TxtPass.Password;
                 s.RootPath = TxtPath.Text;
-            } else {
-                var s2 = new ServerConfig { Alias = TxtAlias.Text, Host = TxtHost.Text, Port = int.TryParse(TxtPort.Text, out int p) ? p : 22, Username = TxtUser.Text, Password = TxtPass.Password, RootPath = TxtPath.Text };
-                _servers.Add(s2);
             }
             var settings = ConfigService.Load();
             settings.Servers = _servers.ToList();
+            settings.AlertKeywords = _keywords.ToList();
             ConfigService.Save(settings); this.Close();
+        }
+        private void AddKeyword_Click(object sender, RoutedEventArgs e) {
+            string kw = TxtKeyword.Text.Trim();
+            if (!string.IsNullOrEmpty(kw) && !_keywords.Contains(kw)) {
+                _keywords.Add(kw); TxtKeyword.Text = "";
+            }
+        }
+        private void DelKeyword_Click(object sender, RoutedEventArgs e) {
+            if (KeywordList.SelectedItem is string kw) _keywords.Remove(kw);
         }
     }
 }
