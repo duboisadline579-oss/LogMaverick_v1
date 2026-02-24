@@ -68,10 +68,10 @@ namespace LogMaverick.Views {
             var tab = MainTabs.SelectedItem as TabItem;
             if (tab == null) return;
             string cat = tab.Tag?.ToString() ?? "MACHINE";
-            var menu = new ContextMenu();
-            var i1 = new MenuItem { Header = $"📂 {cat} 파일 지정" };
+            var menu = new System.Windows.Controls.ContextMenu();
+            var i1 = new System.Windows.Controls.MenuItem { Header = $"📂 {cat} 파일 지정" };
             i1.Click += async (s, ev) => { if (FileTree.SelectedItem is FileNode node) await VM.ConnectSessionAsync(VM.SelectedServer, cat, node.FullPath); else VM.StatusMessage = "⚠ 파일을 먼저 선택하세요"; };
-            var i2 = new MenuItem { Header = $"⏹ {cat} 연결 해제" };
+            var i2 = new System.Windows.Controls.MenuItem { Header = $"⏹ {cat} 연결 해제" };
             i2.Click += (s, ev) => VM.StopSession(cat);
             menu.Items.Add(i1); menu.Items.Add(i2); menu.IsOpen = true;
         }

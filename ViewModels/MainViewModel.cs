@@ -93,7 +93,7 @@ namespace LogMaverick.ViewModels {
         }
         private void ShowAlert(LogEntry log) {
             try {
-                System.Windows.Forms.NotifyIcon icon = new System.Windows.Forms.NotifyIcon();
+                var icon = new System.Windows.Forms.NotifyIcon();
                 icon.Icon = System.Drawing.SystemIcons.Warning;
                 icon.Visible = true;
                 icon.ShowBalloonTip(3000, "⚠ LogMaverick 알림", $"[{log.Category}] {log.Message.Substring(0, Math.Min(80, log.Message.Length))}", System.Windows.Forms.ToolTipIcon.Warning);
