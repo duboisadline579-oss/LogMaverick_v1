@@ -15,21 +15,25 @@ namespace LogMaverick.Views {
             new ConfigWindow(VM.Servers) { Owner = this }.ShowDialog();
 
         private async void Connect_Click(object sender, RoutedEventArgs e) {
+            if (VM.IsConnected) { VM.Disconnect(); return; }
             if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버를 먼저 선택하세요"; return; }
-            if (FileTree.SelectedItem is not FileNode node) { VM.StatusMessage = "⚠ 파일을 선택하세요 (REFRESH 후 파일트리에서 선택)"; return; }
+            if (FileTree.SelectedItem is not FileNode node) { VM.StatusMessage = "⚠ 파일을 선택하세요 (🔄 버튼으로 목록 로드 후 선택)"; return; }
             try { await VM.ConnectAsync(VM.SelectedServer, node.FullPath); }
             catch (Exception ex) {
                 VM.StatusMessage = "❌ 연결 실패: " + ex.Message;
                 MessageBox.Show($"연결 실패\n\n원인: {ex.Message}\n\n확인사항:\n- Host/Port 확인\n- Username/Password 확인\n- 서버 SSH 허용 여부 확인", "연결 실패", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Disconnect_Click(object sender, RoutedEventArgs e) => VM.Disconnect();
+        private void FileTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {
+            if (FileTree.SelectedItem is FileNode node)
+                VM.StatusMessage = $"📄 선택됨: {node.FullPath} — CONNECT 버튼을 누르세요";
+        }
         private void Refresh_Click(object sender, RoutedEventArgs e) {
             if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버를 먼저 선택하세요"; return; }
             try {
                 VM.StatusMessage = "🔄 파일 트리 로딩 중...";
                 FileTree.ItemsSource = FileService.GetRemoteTree(VM.SelectedServer);
-                VM.StatusMessage = "✅ 파일 트리 로드 완료 — 파일 선택 후 CONNECT 하세요";
+                VM.StatusMessage = "✅ 파일 목록 로드 완료 — 파일 선택 후 CONNECT 하세요";
             } catch (Exception ex) { VM.StatusMessage = "❌ 트리 로드 실패: " + ex.Message; }
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) => VM.Disconnect();
@@ -39,9 +43,12 @@ namespace LogMaverick.Views {
             if (MainTabs.SelectedItem is TabItem tab) VM.ExportLogs(tab.Header.ToString());
         }
         private void ExportAll_Click(object sender, RoutedEventArgs e) => VM.ExportAll();
+        private void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (MainTabs.SelectedItem is TabItem tab) VM.ResetTab(tab.Header.ToString());
+        }
         private void Log_DoubleClick(object sender, RoutedEventArgs e) {
             if ((sender as ListView)?.SelectedItem is LogEntry log)
-                new TidTraceWindow(log.Tid) { Owner = this }.Show();
+                new LogDetailWindow(log) { Owner = this }.Show();
         }
         private void Copy_Click(object sender, RoutedEventArgs e) {
             if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log)
@@ -56,6 +63,9 @@ namespace LogMaverick.Views {
                 lv.ScrollIntoView(lv.Items[0]);
         }
         private void File_DoubleClick(object sender, MouseButtonEventArgs e) => Connect_Click(null, null);
-        private void ErrorBox_Click(object sender, RoutedEventArgs e) => new ErrorWindow(VM.ErrorHistory) { Owner = this }.Show();
+        private void ErrorBox_Click(object sender, RoutedEventArgs e) {
+            VM.ResetErrors();
+            new ErrorWindow(VM.ErrorHistory) { Owner = this }.Show();
+        }
     }
 }

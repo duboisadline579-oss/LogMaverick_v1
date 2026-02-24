@@ -4,7 +4,7 @@
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <TextBlock Text="서버 목록" Foreground="#555" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
     <ListBox x:Name="SrvList" Grid.Row="1" Background="#1A1A1A" Foreground="White" BorderBrush="#333" BorderThickness="1" DisplayMemberPath="Alias" SelectionChanged="SrvList_SelectionChanged"/>
-    <Button Grid.Row="2" Content="+ NEW SERVER" Click="New_Click" Height="30" Background="#1A1A1A" Foreground="#007AFF" BorderBrush="#007AFF" BorderThickness="1" Margin="0,8,0,0"/>
+    
     <StackPanel Grid.Column="1" Grid.RowSpan="3" Margin="15,0,0,0">
         <TextBlock Text="서버 정보 입력" Foreground="#007AFF" FontSize="13" FontWeight="Bold" Margin="0,0,0,15"/>
         <TextBlock Text="Alias (서버 별칭)" Foreground="#888" FontSize="11"/>

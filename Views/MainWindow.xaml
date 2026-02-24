@@ -5,65 +5,90 @@
         Title="Log Maverick v3" Height="850" Width="1450" Background="#0A0A0A"
         Closing="Window_Closing">
     <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="25"/></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
         <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-        <Border Grid.Row="0" Background="#121212" BorderBrush="#222" BorderThickness="0,0,1,0">
+        <Border Grid.Row="0" Background="#121212" BorderBrush="#333" BorderThickness="0,0,1,0">
             <Grid Margin="15">
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <StackPanel>
-                    <TextBlock Text="MAVERICK v3" Foreground="#007AFF" FontSize="20" FontWeight="Black" Margin="0,0,0,15"/>
-                    <TextBlock Text="{Binding ConnectionStatusText}" Foreground="{Binding ConnectionStatusColor}" FontSize="11" FontWeight="Bold" Margin="0,0,0,8"/>
-                    <Grid>
+                    <TextBlock Text="LOG MAVERICK v3" Foreground="#007AFF" FontSize="18" FontWeight="Black" Margin="0,0,0,12"/>
+                    <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="36"/></Grid.ColumnDefinitions>
-                        <ComboBox x:Name="SrvList" ItemsSource="{Binding Servers}" SelectedItem="{Binding SelectedServer}" DisplayMemberPath="Alias" Height="34" Background="#1E1E1E" Foreground="White" BorderBrush="#333"/>
-                        <Button Grid.Column="1" Content="⚙" Click="Config_Click" Width="34" Height="34" Background="#1E1E1E" Foreground="#007AFF" BorderBrush="#333" FontSize="16" Margin="2,0,0,0" ToolTip="서버 설정"/>
+                        <ComboBox x:Name="SrvList" ItemsSource="{Binding Servers}" SelectedItem="{Binding SelectedServer}" DisplayMemberPath="Alias" Height="34" Background="#2A2A2A" Foreground="#FFFFFF" BorderBrush="#444" BorderThickness="1"/>
+                        <Button Grid.Column="1" Content="⚙" Click="Config_Click" Width="34" Height="34" Background="#2A2A2A" Foreground="#007AFF" BorderBrush="#444" FontSize="16" Margin="2,0,0,0" ToolTip="서버 설정"/>
                     </Grid>
-                    <Button Content="▶  START CONNECT" Click="Connect_Click" Height="38" Background="#007AFF" Foreground="White" FontWeight="Bold" Margin="0,8,0,4" FontSize="13"/>
-                    <Button Content="⏹  DISCONNECT" Click="Disconnect_Click" Height="32" Background="#1A1A1A" Foreground="#FF4500" BorderBrush="#FF4500" BorderThickness="1" FontSize="12"/>
+                    <Button x:Name="BtnConnect" Content="{Binding ConnectButtonText}" Click="Connect_Click" Height="38" Background="{Binding ConnectButtonColor}" Foreground="White" FontWeight="Bold" FontSize="13" BorderThickness="0"/>
                 </StackPanel>
                 <StackPanel Grid.Row="1" Margin="0,15,0,0">
-                    <TextBlock Text="FILE EXPLORER" Foreground="#555" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
-                    <TextBlock Text="※ REFRESH 후 파일 선택 → CONNECT" Foreground="#444" FontSize="10" Margin="0,0,0,5" TextWrapping="Wrap"/>
-                    <TreeView x:Name="FileTree" Height="370" Background="#0D0D0D" Foreground="#888" BorderBrush="#222" BorderThickness="1" MouseDoubleClick="File_DoubleClick">
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="FILE EXPLORER" Foreground="#AAAAAA" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="🔄" Click="Refresh_Click" Width="28" Height="22" Background="#2A2A2A" Foreground="#AAAAAA" BorderBrush="#444" FontSize="12" ToolTip="파일 트리 새로고침"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtTreeGuide" Text="⚙ 서버 선택 후 🔄 버튼을 눌러 파일 목록을 불러오세요" Foreground="#666" FontSize="10" TextWrapping="Wrap" Margin="0,0,0,5"/>
+                    <TreeView x:Name="FileTree" Background="#0D0D0D" Foreground="#CCCCCC" BorderBrush="#333" BorderThickness="1" SelectedItemChanged="FileTree_SelectedItemChanged">
+                        <TreeView.Resources>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="Foreground" Value="#CCCCCC"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#007AFF"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#1E1E1E"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TreeView.Resources>
                         <TreeView.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="📄 " FontSize="11"/>
-                                    <TextBlock Text="{Binding Name}" FontSize="11"/>
+                                    <TextBlock Text="{Binding Icon}" Margin="0,0,5,0" FontSize="12"/>
+                                    <TextBlock Text="{Binding Name}" FontSize="12"/>
                                 </StackPanel>
                             </DataTemplate>
                         </TreeView.ItemTemplate>
                     </TreeView>
                 </StackPanel>
-                <StackPanel Grid.Row="3">
-                    <Button Content="🔄  REFRESH TREE" Click="Refresh_Click" Height="30" Background="#1A1A1A" Foreground="#666" BorderBrush="#333" BorderThickness="1" FontSize="11"/>
-                </StackPanel>
+                <Border Grid.Row="2" Background="#1A1A1A" BorderBrush="#333" BorderThickness="1" Padding="10,8" Margin="0,10,0,0">
+                    <StackPanel>
+                        <TextBlock Text="연결 상태" Foreground="#888" FontSize="10" FontWeight="Bold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding ConnectionStatusText}" Foreground="{Binding ConnectionStatusColor}" FontSize="12" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding ConnectedFile}" Foreground="#666" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
             </Grid>
         </Border>
         <Grid Grid.Column="1" Grid.Row="0">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <Border Background="#440000" Visibility="{Binding ErrorVisibility}" Height="45">
+            <Border Background="{Binding ErrorFlash}" Visibility="{Binding ErrorVisibility}" Height="40">
                 <Button Click="ErrorBox_Click" Background="Transparent" BorderThickness="0">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚠  EXCEPTIONS: " Foreground="White" VerticalAlignment="Center" Margin="10,0"/>
-                        <TextBlock Text="{Binding ErrorHistory.Count}" Foreground="White" VerticalAlignment="Center" FontWeight="Bold"/>
-                        <TextBlock Text=" 건 — 클릭하여 상세보기" Foreground="#FFB0B0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBlock Text="⚠  EXCEPTIONS: " Foreground="#FF6B6B" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding ErrorHistory.Count}" Foreground="White" VerticalAlignment="Center" FontWeight="Bold" FontSize="14"/>
+                        <TextBlock Text=" 건 — 클릭하여 상세보기" Foreground="#FFB0B0" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0"/>
                     </StackPanel>
                 </Button>
             </Border>
             <Border Grid.Row="1" Background="#161616" Padding="12,8" BorderBrush="#222" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Background="#0D0D0D" Foreground="White" BorderBrush="#333" BorderThickness="1" Height="34" VerticalContentAlignment="Center" Padding="10,0"/>
+                    <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Background="#0D0D0D" Foreground="White" BorderBrush="#444" BorderThickness="1" Height="34" VerticalContentAlignment="Center" Padding="10,0" FontSize="12"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
                         <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="90" Height="34" Background="{Binding IsPaused, Converter={StaticResource PauseColorConverter}}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold"/>
-                        <Button Content="EXPORT" Click="Export_Click" Width="70" Height="34" Background="#1E1E1E" Foreground="#AAA" BorderBrush="#333" Margin="0,0,4,0"/>
-                        <Button Content="ALL" Click="ExportAll_Click" Width="50" Height="34" Background="#1E1E1E" Foreground="#AAA" BorderBrush="#333" Margin="0,0,4,0" ToolTip="전체 로그 내보내기"/>
-                        <Button Content="CLEAR" Click="Clear_Click" Width="70" Height="34" Background="#1E1E1E" Foreground="#AAA" BorderBrush="#333"/>
+                        <Button Content="EXPORT" Click="Export_Click" Width="75" Height="34" Background="#2A2A2A" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0"/>
+                        <Button Content="ALL" Click="ExportAll_Click" Width="50" Height="34" Background="#2A2A2A" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="전체 로그 내보내기"/>
+                        <Button Content="CLEAR" Click="Clear_Click" Width="70" Height="34" Background="#2A2A2A" Foreground="#CCCCCC" BorderBrush="#444"/>
                     </StackPanel>
                 </Grid>
             </Border>
-            <TabControl x:Name="MainTabs" Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="8">
+            <TabControl x:Name="MainTabs" Grid.Row="2" SelectionChanged="MainTabs_SelectionChanged" Background="Transparent" BorderThickness="0" Margin="8">
                 <TabControl.Resources>
                     <ContextMenu x:Key="LogMenu">
                         <MenuItem Header="📋 Copy Message" Click="Copy_Click"/>
@@ -72,30 +97,35 @@
                         <MenuItem Header="🚫 Exclude this TID" Click="Exclude_Click"/>
                     </ContextMenu>
                     <Style TargetType="TabItem">
-                        <Setter Property="Foreground" Value="#666"/>
-                        <Setter Property="Background" Value="#111"/>
-                        <Setter Property="Padding" Value="16,6"/>
+                        <Setter Property="Foreground" Value="#888"/>
+                        <Setter Property="Background" Value="#161616"/>
+                        <Setter Property="Padding" Value="16,7"/>
                         <Setter Property="FontSize" Value="12"/>
                         <Setter Property="FontWeight" Value="Bold"/>
-                        <Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Foreground" Value="#007AFF"/></Trigger></Style.Triggers>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Background" Value="#007AFF"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                     <Style TargetType="ListView">
                         <Setter Property="Background" Value="#0A0A0A"/>
-                        <Setter Property="Foreground" Value="#BBB"/>
+                        <Setter Property="Foreground" Value="#DDDDDD"/>
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="ContextMenu" Value="{StaticResource LogMenu}"/>
                         <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True"/>
                         <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"/>
                     </Style>
                 </TabControl.Resources>
-                <TabItem Header="MACHINE"><ListView ItemsSource="{Binding MachineLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
-                <TabItem Header="PROCESS"><ListView ItemsSource="{Binding ProcessLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
-                <TabItem Header="DRIVER"><ListView ItemsSource="{Binding DriverLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
-                <TabItem Header="OTHERS"><ListView ItemsSource="{Binding OtherLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
+                <TabItem Header="{Binding MachineTab}"><ListView ItemsSource="{Binding MachineLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
+                <TabItem Header="{Binding ProcessTab}"><ListView ItemsSource="{Binding ProcessLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
+                <TabItem Header="{Binding DriverTab}"><ListView ItemsSource="{Binding DriverLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
+                <TabItem Header="{Binding OtherTab}"><ListView ItemsSource="{Binding OtherLogs}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="100"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="750"/></GridView></ListView.View></ListView></TabItem>
             </TabControl>
         </Grid>
-        <StatusBar Grid.Row="1" Grid.ColumnSpan="2" Background="#007AFF">
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" Foreground="White" FontSize="11" FontWeight="Bold" Margin="5,0"/></StatusBarItem>
+        <StatusBar Grid.Row="1" Grid.ColumnSpan="2" Background="#1A1A1A" BorderBrush="#333" BorderThickness="0,1,0,0">
+            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" Foreground="#CCCCCC" FontSize="11" Margin="5,0"/></StatusBarItem>
         </StatusBar>
     </Grid>
 </Window>
