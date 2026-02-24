@@ -94,12 +94,9 @@ namespace LogMaverick.ViewModels {
             });
         }
         private void ShowAlert(LogEntry log) {
-            try {
-                var icon = new System.Windows.Forms.NotifyIcon();
-                icon.Icon = System.Drawing.SystemIcons.Warning;
-                icon.Visible = true;
-                icon.ShowBalloonTip(3000, "⚠ LogMaverick 알림", $"[{log.Category}] {log.Message.Substring(0, Math.Min(80, log.Message.Length))}", System.Windows.Forms.ToolTipIcon.Warning);
-            } catch { }
+            System.Windows.Application.Current?.Dispatcher.InvokeAsync(() => {
+                System.Windows.MessageBox.Show($"[{log.Category}] {log.Message.Substring(0, Math.Min(80, log.Message.Length))}", "⚠ LogMaverick 알림", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            });
         }
         private void ApplyFilter() {
             foreach (var log in MachineLogs.Concat(ProcessLogs).Concat(DriverLogs).Concat(OtherLogs))
