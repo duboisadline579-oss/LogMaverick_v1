@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
+
+using WinApp = System.Windows.Application;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -65,7 +67,7 @@ namespace LogMaverick.ViewModels {
             foreach(var k in settings.AlertKeywords) AlertKeywords.Add(k);
             _engine.OnLogReceived += (log) => {
                 if (IsPaused || ExcludedTids.Contains(log.Tid)) return;
-                Application.Current?.Dispatcher.InvokeAsync(() => {
+                WinApp.Current?.Dispatcher.InvokeAsync(() => {
                     if (!string.IsNullOrEmpty(FilterText) && !log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase)) return;
                     var target = log.Category?.ToUpper() switch {
                         "MACHINE" => MachineLogs, "DRIVER" => DriverLogs, "PROCESS" => ProcessLogs, _ => OtherLogs
@@ -87,7 +89,7 @@ namespace LogMaverick.ViewModels {
                         ShowAlert(log);
                 });
             };
-            _engine.OnStatusChanged += (s) => Application.Current?.Dispatcher.InvokeAsync(() => {
+            _engine.OnStatusChanged += (s) => WinApp.Current?.Dispatcher.InvokeAsync(() => {
                 StatusMessage = s; IsConnected = _engine.HasSession("MACHINE") || _engine.HasSession("PROCESS") || _engine.HasSession("DRIVER") || _engine.HasSession("OTHERS");
             });
         }
