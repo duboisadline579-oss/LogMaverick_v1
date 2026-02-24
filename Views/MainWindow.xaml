@@ -4,11 +4,6 @@
         xmlns:h="clr-namespace:LogMaverick.Helpers"
         Title="Log Maverick v3" Closing="Window_Closing"
         Height="850" Width="1450" Background="#0A0A0A">
-    <Window.Resources>
-        <h:CountToVisibilityConverter x:Key="CountToVis"/>
-        <h:PauseColorConverter x:Key="PauseColorConverter"/>
-        <h:LogTypeColorConverter x:Key="LogColorConverter"/>
-    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="28"/></Grid.RowDefinitions>
         <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
