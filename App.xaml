@@ -1,15 +1,9 @@
 <Application x:Class="LogMaverick.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:h="clr-namespace:LogMaverick.Helpers"
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
-        <h:CountToVisibilityConverter x:Key="CountToVis"/>
-        <h:PauseColorConverter x:Key="PauseColorConverter"/>
-        <h:LogTypeColorConverter x:Key="LogColorConverter"/>
-        <h:NewLogFlashConverter x:Key="FlashConverter"/>
         <Style TargetType="ListViewItem">
-            <Setter Property="Foreground" Value="{Binding Converter={StaticResource LogColorConverter}}"/>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="#007AFF"/>
