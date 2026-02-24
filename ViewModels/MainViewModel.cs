@@ -19,8 +19,9 @@ namespace LogMaverick.ViewModels {
 
         private LogCoreEngine _engine = new LogCoreEngine();
         private string _statusMessage = "▶ CONNECT 버튼을 눌러 서버에 연결하세요";
-        private bool _isPaused, _isConnected, _isLoading;
+        private bool _isPaused, _isConnected, _isLoading, _autoScroll = true;
         private string _connectedFile = "", _filterText;
+        private string _levelFilter = "ALL";
         private ServerConfig _selectedServer;
         private int _newMachine, _newProcess, _newDriver, _newOther, _newErrors;
         public Dictionary<string, string> SessionFiles { get; } = new();
@@ -32,14 +33,18 @@ namespace LogMaverick.ViewModels {
         public ObservableCollection<LogEntry> ErrorHistory { get; } = new();
         public ObservableCollection<string> ExcludedTids { get; } = new();
         public ObservableCollection<string> AlertKeywords { get; } = new();
+        public ObservableCollection<string> FilterHistory { get; } = new();
         public ServerConfig SelectedServer { get => _selectedServer; set { _selectedServer = value; OnPropertyChanged(); } }
         public string StatusMessage { get => _statusMessage; set { _statusMessage = value; OnPropertyChanged(); } }
         public bool IsPaused { get => _isPaused; set { _isPaused = value; OnPropertyChanged(); OnPropertyChanged(nameof(PauseStatusText)); } }
+        public bool AutoScroll { get => _autoScroll; set { _autoScroll = value; OnPropertyChanged(); OnPropertyChanged(nameof(AutoScrollText)); } }
+        public string AutoScrollText => _autoScroll ? "⬇ AUTO" : "⬇ OFF";
         public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(); OnPropertyChanged(nameof(ConnectionStatusText)); OnPropertyChanged(nameof(ConnectionStatusColor)); OnPropertyChanged(nameof(ConnectButtonText)); OnPropertyChanged(nameof(ConnectButtonColor)); } }
-        public bool IsLoading { get => _isLoading; set { _isLoading = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotLoading)); OnPropertyChanged(nameof(ConnectButtonText)); } }
+        public bool IsLoading { get => _isLoading; set { _isLoading = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotLoading)); OnPropertyChanged(nameof(ConnectButtonText)); OnPropertyChanged(nameof(ConnectButtonColor)); OnPropertyChanged(nameof(ConnectionStatusText)); OnPropertyChanged(nameof(ConnectionStatusColor)); } }
         public bool IsNotLoading => !_isLoading;
         public string ConnectedFile { get => _connectedFile; set { _connectedFile = value; OnPropertyChanged(); } }
         public string FilterText { get => _filterText; set { _filterText = value; OnPropertyChanged(); ApplyFilter(); } }
+        public string LevelFilter { get => _levelFilter; set { _levelFilter = value; OnPropertyChanged(); ApplyFilter(); } }
         public string PauseStatusText => IsPaused ? "▶ RESUME" : "⏸ PAUSE";
         public string ConnectButtonText => IsLoading ? "⏳ 로딩 중..." : IsConnected ? "⏹  DISCONNECT" : "▶  CONNECT";
         public string ConnectButtonColor => IsLoading ? "#888888" : IsConnected ? "#FF4500" : "#007AFF";
@@ -65,10 +70,11 @@ namespace LogMaverick.ViewModels {
             foreach(var s in settings.Servers) Servers.Add(s);
             foreach(var t in settings.ExcludedTids) ExcludedTids.Add(t);
             foreach(var k in settings.AlertKeywords) AlertKeywords.Add(k);
+            foreach(var f in settings.FilterHistory) FilterHistory.Add(f);
             _engine.OnLogReceived += (log) => {
                 if (IsPaused || ExcludedTids.Contains(log.Tid)) return;
                 WinApp.Current?.Dispatcher.InvokeAsync(() => {
-                    if (!string.IsNullOrEmpty(FilterText) && !log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase)) return;
+                    if (!MatchesFilter(log)) return;
                     var target = log.Category?.ToUpper() switch {
                         "MACHINE" => MachineLogs, "DRIVER" => DriverLogs, "PROCESS" => ProcessLogs, _ => OtherLogs
                     };
@@ -86,7 +92,7 @@ namespace LogMaverick.ViewModels {
                         NewErrors++; OnPropertyChanged(nameof(ErrorVisibility));
                     }
                     if (AlertKeywords.Any(k => log.Message.Contains(k, StringComparison.OrdinalIgnoreCase)))
-                        StatusMessage = $"🔔 알림: [{log.Category}] {log.Message.Substring(0, Math.Min(60, log.Message.Length))}";
+                        StatusMessage = $"🔔 [{log.Category}] {log.Message.Substring(0, Math.Min(60, log.Message.Length))}";
                 });
             };
             _engine.OnStatusChanged += (s) => WinApp.Current?.Dispatcher.InvokeAsync(() => {
@@ -95,9 +101,21 @@ namespace LogMaverick.ViewModels {
                 else if (s.StartsWith("❌") || s.StartsWith("🔌")) { IsConnected = false; IsLoading = false; }
             });
         }
+        private bool MatchesFilter(LogEntry log) {
+            if (!string.IsNullOrEmpty(FilterText) && !log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase)) return false;
+            if (LevelFilter == "ERROR" && log.Type != LogType.Error && log.Type != LogType.Critical) return false;
+            if (LevelFilter == "EXCEPTION" && log.Type != LogType.Exception) return false;
+            if (LevelFilter == "SYSTEM" && log.Type != LogType.System) return false;
+            return true;
+        }
         private void ApplyFilter() {
             foreach (var log in MachineLogs.Concat(ProcessLogs).Concat(DriverLogs).Concat(OtherLogs))
                 log.IsHighlighted = !string.IsNullOrEmpty(FilterText) && log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+        }
+        public void AddFilterHistory(string text) {
+            if (string.IsNullOrEmpty(text) || FilterHistory.Contains(text)) return;
+            FilterHistory.Insert(0, text);
+            if (FilterHistory.Count > 10) FilterHistory.RemoveAt(FilterHistory.Count - 1);
         }
         public async Task ConnectSessionAsync(ServerConfig config, string category, string filePath) {
             SessionFiles[category] = filePath;
@@ -140,7 +158,7 @@ namespace LogMaverick.ViewModels {
         }
         public void ResetErrors() => NewErrors = 0;
         public void SaveSettings() {
-            ConfigService.Save(new AppSettings { Servers = Servers.ToList(), ExcludedTids = ExcludedTids.ToList(), AlertKeywords = AlertKeywords.ToList() });
+            ConfigService.Save(new AppSettings { Servers = Servers.ToList(), ExcludedTids = ExcludedTids.ToList(), AlertKeywords = AlertKeywords.ToList(), FilterHistory = FilterHistory.ToList() });
         }
         public void ClearAll() {
             MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear(); ErrorHistory.Clear();

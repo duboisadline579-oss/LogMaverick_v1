@@ -77,7 +77,10 @@ namespace LogMaverick.Services {
                 LogType type = up.Contains("ERROR") || up.Contains("FAIL") ? LogType.Error :
                     up.Contains("EXCEPTION") ? LogType.Exception :
                     up.Contains("CRITICAL") || up.Contains("FATAL") ? LogType.Critical : LogType.System;
-                OnLogReceived?.Invoke(new LogEntry { Time = DateTime.Now, Message = line.Trim(), Category = Category, Type = type, Tid = ExtractTid(line) });
+                var t = _timeRegex.Match(line);
+                DateTime logTime = t.Success && DateTime.TryParse(t.Groups[1].Value, out var dt) ? dt : DateTime.Now;
+                string tid = _jsonTidRegex.Match(line) is var jm && jm.Success ? jm.Groups[1].Value : ExtractTid(line);
+                OnLogReceived?.Invoke(new LogEntry { Time = logTime, Message = line.Trim(), Category = Category, Type = type, Tid = tid });
             }
         }
         public void Dispose() { _autoReconnect = false; _cts?.Cancel(); _stream?.Dispose(); _client?.Disconnect(); _client?.Dispose(); }

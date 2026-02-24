@@ -23,6 +23,7 @@ namespace LogMaverick.Models {
         public string Category { get; set; } = "OTHERS";
         public LogType Type { get; set; } = LogType.System;
         public bool IsHighlighted { get; set; } = false;
+        public bool IsBookmarked { get; set; } = false;
         public string Color => IsHighlighted ? "#FFD700" : (Type == LogType.Error ? "#FF4500" : (Type == LogType.Exception ? "#FF00FF" : "#DCDCDC"));
     }
 

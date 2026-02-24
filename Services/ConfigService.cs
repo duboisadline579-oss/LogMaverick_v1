@@ -10,6 +10,7 @@ namespace LogMaverick.Services {
         public List<ServerConfig> Servers { get; set; } = new();
         public List<string> ExcludedTids { get; set; } = new();
         public List<string> AlertKeywords { get; set; } = new();
+        public List<string> FilterHistory { get; set; } = new();
         public Dictionary<string, string> LastFiles { get; set; } = new();
     }
     public static class ConfigService {
