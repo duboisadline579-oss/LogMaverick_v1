@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +11,8 @@ namespace LogMaverick.Services {
         private SshClient? _client;
         private ShellStream? _stream;
         private CancellationTokenSource? _cts;
+        private bool _isConnecting = false;
+        public bool IsConnected => _client?.IsConnected ?? false;
         public event Action<LogEntry>? OnLogReceived;
         public event Action<string>? OnStatusChanged;
         private readonly Regex _tidRegex = new Regex(@"(?i)(?:TID[:\s-]*|\[|ID:)(\d+)", RegexOptions.Compiled);
@@ -26,28 +27,35 @@ namespace LogMaverick.Services {
                 using var client = new SshClient(config.Host, config.Port, config.Username, config.Password);
                 client.Connect();
                 var cmd = client.RunCommand($"find {config.RootPath} -maxdepth 2 -name \"*.log\"");
-                foreach(var path in cmd.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries)) {
+                foreach(var path in cmd.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries))
                     nodes.Add(new FileNode { Name = System.IO.Path.GetFileName(path), FullPath = path.Trim() });
-                }
-            } catch (Exception ex) { OnStatusChanged?.Invoke("Tree Error: " + ex.Message); }
+            } catch (Exception ex) { OnStatusChanged?.Invoke("❌ Tree Error: " + ex.Message); }
             return nodes;
         }
-
         public async Task StartStreamingAsync(ServerConfig config, string filePath) {
-            Dispose();
+            if (_isConnecting) { OnStatusChanged?.Invoke("⚠ 이미 연결 시도 중입니다"); return; }
+            if (_client?.IsConnected == true) Dispose();
+            _isConnecting = true;
             _cts = new CancellationTokenSource();
             await Task.Run(() => {
                 try {
                     _client = new SshClient(config.Host, config.Port, config.Username, config.Password);
                     _client.KeepAliveInterval = TimeSpan.FromSeconds(30);
                     _client.Connect();
+                    if (!_client.IsConnected) throw new Exception("SSH 연결 실패 — Host/Port/계정 정보를 확인하세요");
+                    OnStatusChanged?.Invoke($"✅ 연결됨: {config.Alias} ({config.Host})");
                     _stream = _client.CreateShellStream("LogStream", 0, 0, 0, 0, 4096);
                     _stream.WriteLine($"tail -n 100 -F {filePath}");
+                    _isConnecting = false;
                     while (_client.IsConnected && !_cts.Token.IsCancellationRequested) {
                         if (_stream.DataAvailable) ProcessRawData(_stream.Read(), filePath);
                         Thread.Sleep(50);
                     }
-                } catch (Exception ex) { OnStatusChanged?.Invoke("Stream Error: " + ex.Message); }
+                    OnStatusChanged?.Invoke("🔌 연결 종료됨");
+                } catch (Exception ex) {
+                    _isConnecting = false;
+                    OnStatusChanged?.Invoke("❌ 연결 실패: " + ex.Message);
+                }
             }, _cts.Token);
         }
         private void ProcessRawData(string data, string filePath) {
@@ -60,6 +68,6 @@ namespace LogMaverick.Services {
                 OnLogReceived?.Invoke(new LogEntry { Time = DateTime.Now, Message = line.Trim(), Category = cat, Type = type, Tid = ExtractTid(line) });
             }
         }
-        public void Dispose() { _cts?.Cancel(); _stream?.Dispose(); _client?.Disconnect(); _client?.Dispose(); }
+        public void Dispose() { _cts?.Cancel(); _stream?.Dispose(); _client?.Disconnect(); _client?.Dispose(); _isConnecting = false; }
     }
 }

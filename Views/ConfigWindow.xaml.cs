@@ -15,26 +15,29 @@ namespace LogMaverick.Views {
         }
         private void SrvList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             if (SrvList.SelectedItem is ServerConfig s) {
-                TxtAlias.Text = s.Alias;
-                TxtHost.Text = s.Host;
-                TxtPort.Text = s.Port.ToString();
-                TxtUser.Text = s.Username;
-                TxtPath.Text = s.RootPath;
+                TxtAlias.Text = s.Alias; TxtHost.Text = s.Host;
+                TxtPort.Text = s.Port.ToString(); TxtUser.Text = s.Username;
+                TxtPath.Text = s.RootPath; BtnDel.IsEnabled = true;
             }
         }
-        private void Add_Click(object sender, RoutedEventArgs e) => _servers.Add(new ServerConfig { Alias = "New Server" });
-        private void Del_Click(object sender, RoutedEventArgs e) { if(SrvList.SelectedItem is ServerConfig s) _servers.Remove(s); }
+        private void New_Click(object sender, RoutedEventArgs e) {
+            var s = new ServerConfig { Alias = "New Server" };
+            _servers.Add(s); SrvList.SelectedItem = s;
+        }
+        private void Del_Click(object sender, RoutedEventArgs e) {
+            if (SrvList.SelectedItem is ServerConfig s) { _servers.Remove(s); BtnDel.IsEnabled = false; }
+        }
         private void Save_Click(object sender, RoutedEventArgs e) {
             if (SrvList.SelectedItem is ServerConfig s) {
-                s.Alias = TxtAlias.Text;
-                s.Host = TxtHost.Text;
+                s.Alias = TxtAlias.Text; s.Host = TxtHost.Text;
                 s.Port = int.TryParse(TxtPort.Text, out int p) ? p : 22;
-                s.Username = TxtUser.Text;
-                s.Password = TxtPass.Password;
+                s.Username = TxtUser.Text; s.Password = TxtPass.Password;
                 s.RootPath = TxtPath.Text;
+            } else {
+                var s2 = new ServerConfig { Alias = TxtAlias.Text, Host = TxtHost.Text, Port = int.TryParse(TxtPort.Text, out int p) ? p : 22, Username = TxtUser.Text, Password = TxtPass.Password, RootPath = TxtPath.Text };
+                _servers.Add(s2);
             }
-            ConfigService.Save(_servers.ToList());
-            this.Close();
+            ConfigService.Save(_servers.ToList()); this.Close();
         }
     }
 }
