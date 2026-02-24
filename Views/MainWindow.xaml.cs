@@ -29,7 +29,7 @@ namespace LogMaverick.Views {
         private void Export_Click(object sender, RoutedEventArgs e) {
             if (MainTabs.SelectedItem is TabItem tab) VM.ExportLogs(tab.Header.ToString());
         }
-        private void Log_DoubleClick(object sender, MouseButtonEventArgs e) {
+        private void Log_DoubleClick(object sender, RoutedEventArgs e) {
             if ((sender as ListView)?.SelectedItem is LogEntry log)
                 new TidTraceWindow(log.Tid) { Owner = this }.Show();
         }
