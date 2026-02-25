@@ -12,6 +12,7 @@ namespace LogMaverick.Services {
         public List<string> AlertKeywords { get; set; } = new();
         public List<string> FilterHistory { get; set; } = new();
         public Dictionary<string, string> LastFiles { get; set; } = new();
+        public Dictionary<string, double> ColumnWidths { get; set; } = new();
     }
     public static class ConfigService {
         private const string FileName = "configs.json";
@@ -22,6 +23,8 @@ namespace LogMaverick.Services {
             File.WriteAllText(FileName, JsonConvert.SerializeObject(settings, Formatting.Indented));
             foreach (var c in settings.Servers) c.Password = Decrypt(c.Password);
         }
+        public static void Backup(string path) { if (File.Exists(FileName)) File.Copy(FileName, path, true); }
+        public static void Restore(string path) { if (File.Exists(path)) File.Copy(path, FileName, true); }
         public static AppSettings Load() {
             if (!File.Exists(FileName)) return new AppSettings();
             try {

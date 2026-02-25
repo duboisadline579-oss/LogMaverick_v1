@@ -4,7 +4,26 @@
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <Style TargetType="ListViewItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#DDDDDD"/>
             <Style.Triggers>
+                <DataTrigger Binding="{Binding Type}" Value="Error">
+                    <Setter Property="Foreground" Value="#FF6B6B"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Type}" Value="Critical">
+                    <Setter Property="Foreground" Value="#FF2222"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Type}" Value="Exception">
+                    <Setter Property="Foreground" Value="#CC88FF"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                    <Setter Property="Background" Value="#3A3A00"/>
+                    <Setter Property="Foreground" Value="#FFD700"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsBookmarked}" Value="True">
+                    <Setter Property="BorderBrush" Value="#FFD700"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                </DataTrigger>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="#007AFF"/>
                     <Setter Property="Foreground" Value="White"/>

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -90,10 +91,8 @@ namespace LogMaverick.Views {
                 Clipboard.SetText(log.Message);
         }
         private void Bookmark_Click(object sender, RoutedEventArgs e) {
-            if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log) {
-                log.IsBookmarked = !log.IsBookmarked;
-                VM.StatusMessage = log.IsBookmarked ? $"🔖 북마크: {log.Message.Substring(0, Math.Min(40, log.Message.Length))}" : "북마크 해제됨";
-            }
+            if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log)
+                VM.ToggleBookmark(log);
         }
         private void Exclude_Click(object sender, RoutedEventArgs e) {
             if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log) {
@@ -122,6 +121,22 @@ namespace LogMaverick.Views {
             var i2 = new System.Windows.Controls.MenuItem { Header = $"⏹ {cat} 스트리밍 중지" };
             i2.Click += (s, ev) => { VM.StopSession(cat); VM.StatusMessage = $"⏹ {cat} 중지됨"; };
             menu.Items.Add(i1); menu.Items.Add(i2); menu.IsOpen = true;
+        }
+        private void Backup_Click(object sender, RoutedEventArgs e) {
+            try {
+                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "LogMaverick_backup.json");
+                ConfigService.Backup(path);
+                VM.StatusMessage = $"✅ 백업 완료: {path}";
+            } catch (Exception ex) { MessageBox.Show("백업 실패: " + ex.Message); }
+        }
+        private void Restore_Click(object sender, RoutedEventArgs e) {
+            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "JSON|*.json", Title = "설정 파일 선택" };
+            if (dlg.ShowDialog() == true) {
+                try {
+                    ConfigService.Restore(dlg.FileName);
+                    VM.StatusMessage = "✅ 복원 완료 — 앱을 재시작하면 적용됩니다";
+                } catch (Exception ex) { MessageBox.Show("복원 실패: " + ex.Message); }
+            }
         }
         private void ErrorBox_Click(object sender, RoutedEventArgs e) {
             VM.ResetErrors();

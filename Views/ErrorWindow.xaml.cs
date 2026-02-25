@@ -1,21 +1,21 @@
-using System.Windows;
-using System.Windows.Input;
 using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Controls;
 using LogMaverick.Models;
 
 namespace LogMaverick.Views {
     public partial class ErrorWindow : Window {
-        private ObservableCollection<LogEntry> _history;
-        public ErrorWindow(ObservableCollection<LogEntry> history) {
+        private ObservableCollection<LogEntry> _errors;
+        public ErrorWindow(ObservableCollection<LogEntry> errors) {
             InitializeComponent();
-            _history = history;
-            ErrorList.ItemsSource = _history;
+            _errors = errors;
+            ErrorList.ItemsSource = errors;
         }
-        private void Error_DoubleClick(object sender, MouseButtonEventArgs e) {
+        private void Error_DoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e) {
             if (ErrorList.SelectedItem is LogEntry log)
-                new TidTraceWindow(log.Tid) { Owner = this }.Show();
+                new LogDetailWindow(log) { Owner = this }.Show();
         }
-        private void Clear_Click(object sender, RoutedEventArgs e) => _history.Clear();
+        private void Clear_Click(object sender, RoutedEventArgs e) => _errors.Clear();
         private void Close_Click(object sender, RoutedEventArgs e) => this.Close();
     }
 }

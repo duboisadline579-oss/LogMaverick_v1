@@ -33,6 +33,5 @@ namespace LogMaverick.Models {
         public bool IsDirectory { get; set; }
         public string Icon => IsDirectory ? "📁" : "📄";
         public System.Collections.ObjectModel.ObservableCollection<FileNode> Children { get; set; } = new();
-        public string Icon => IsDirectory ? "📁" : "📄";
     }
 }

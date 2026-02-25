@@ -13,10 +13,13 @@ namespace LogMaverick.Services {
                 var cmd = client.RunCommand($"find {config.RootPath} -maxdepth 3 -name \"*.log\" | sort");
                 foreach (var path in cmd.Result.Split('\n', StringSplitOptions.RemoveEmptyEntries)) {
                     var trimmed = path.Trim();
-                    var dir = System.IO.Path.GetDirectoryName(trimmed) ?? "";
-                    var file = System.IO.Path.GetFileName(trimmed);
+                    int lastSlash = trimmed.LastIndexOf('/');
+                    string dir = lastSlash > 0 ? trimmed.Substring(0, lastSlash) : config.RootPath;
+                    string file = lastSlash > 0 ? trimmed.Substring(lastSlash + 1) : trimmed;
+                    string relDir = dir.StartsWith(config.RootPath) ? dir.Substring(config.RootPath.Length).TrimStart('/') : dir;
+                    string dirLabel = string.IsNullOrEmpty(relDir) ? "/" : "/" + relDir;
                     if (!roots.ContainsKey(dir))
-                        roots[dir] = new FileNode { Name = System.IO.Path.GetFileName(dir), FullPath = dir, IsDirectory = true };
+                        roots[dir] = new FileNode { Name = dirLabel, FullPath = dir, IsDirectory = true };
                     roots[dir].Children.Add(new FileNode { Name = file, FullPath = trimmed, IsDirectory = false });
                 }
             } catch (Exception ex) { Console.WriteLine("Tree Error: " + ex.Message); }

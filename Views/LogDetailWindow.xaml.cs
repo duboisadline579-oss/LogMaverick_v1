@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Xml;
 using Newtonsoft.Json.Linq;
 using LogMaverick.Models;
 
@@ -32,28 +34,50 @@ namespace LogMaverick.Views {
         }
         private void ParseAndDisplay(string message) {
             _allItems.Clear();
+            string trimmed = message.Trim();
             try {
-                var token = JToken.Parse(message);
-                if (token is JObject obj) {
-                    foreach (var p in obj.Properties()) {
-                        string key = p.Name;
-                        string val = p.Value.ToString();
-                        string kColor = key.ToLower() == "tid" ? "#FFD700" :
-                            key.ToLower().Contains("error") ? "#FF6B6B" : "#00BFFF";
-                        string vColor = val.ToUpper().Contains("ERROR") ? "#FF6B6B" :
-                            val.ToUpper().Contains("OK") || val.ToUpper().Contains("SUCCESS") ? "#00C853" : "#DDDDDD";
-                        _allItems.Add(new KvItem { Key = key, Value = val, KeyColor = kColor, ValueColor = vColor });
+                if (trimmed.StartsWith("{") || trimmed.StartsWith("[")) {
+                    var token = JToken.Parse(trimmed);
+                    if (token is JObject obj)
+                        foreach (var p in obj.Properties()) {
+                            string kColor = p.Name.ToLower() == "tid" ? "#FFD700" :
+                                p.Name.ToLower().Contains("error") ? "#FF6B6B" : "#00BFFF";
+                            string val = p.Value.Type == JTokenType.Object || p.Value.Type == JTokenType.Array
+                                ? p.Value.ToString(Newtonsoft.Json.Formatting.Indented) : p.Value.ToString();
+                            string vColor = val.ToUpper().Contains("ERROR") ? "#FF6B6B" :
+                                val.ToUpper().Contains("OK") || val.ToUpper().Contains("SUCCESS") ? "#00C853" : "#DDDDDD";
+                            _allItems.Add(new KvItem { Key = p.Name, Value = val, KeyColor = kColor, ValueColor = vColor });
+                        }
+                    else _allItems.Add(new KvItem { Key = "value", Value = token.ToString() });
+                } else if (trimmed.StartsWith("<")) {
+                    var doc = new XmlDocument();
+                    doc.LoadXml(trimmed);
+                    FlattenXml(doc.DocumentElement, "");
+                } else {
+                    foreach (var part in trimmed.Split(new[] { ' ', '|', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
+                        var kv = part.Split('=');
+                        if (kv.Length == 2) _allItems.Add(new KvItem { Key = kv[0].Trim(), Value = kv[1].Trim() });
+                        else _allItems.Add(new KvItem { Key = "raw", Value = part.Trim() });
                     }
-                } else { _allItems.Add(new KvItem { Key = "value", Value = token.ToString() }); }
-            } catch {
-                foreach (var part in message.Split(new[] { ' ', '|', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    var kv = part.Split('=');
-                    if (kv.Length == 2) _allItems.Add(new KvItem { Key = kv[0].Trim(), Value = kv[1].Trim() });
-                    else _allItems.Add(new KvItem { Key = "raw", Value = part.Trim() });
                 }
+            } catch {
+                _allItems.Add(new KvItem { Key = "raw", Value = trimmed, KeyColor = "#888888" });
             }
             KvList.ItemsSource = _allItems;
             TxtMatchCount.Text = $"{_allItems.Count}개";
+        }
+        private void FlattenXml(XmlNode node, string prefix) {
+            if (node == null) return;
+            string key = string.IsNullOrEmpty(prefix) ? node.Name : $"{prefix}.{node.Name}";
+            if (node.HasChildNodes && node.FirstChild is XmlText)
+                _allItems.Add(new KvItem { Key = key, Value = node.InnerText.Trim(), KeyColor = "#00BFFF" });
+            else if (!node.HasChildNodes)
+                _allItems.Add(new KvItem { Key = key, Value = "", KeyColor = "#888888" });
+            if (node.Attributes != null)
+                foreach (XmlAttribute attr in node.Attributes)
+                    _allItems.Add(new KvItem { Key = $"{key}@{attr.Name}", Value = attr.Value, KeyColor = "#FFD700" });
+            foreach (XmlNode child in node.ChildNodes)
+                if (child.NodeType == XmlNodeType.Element) FlattenXml(child, key);
         }
         private void Search_Changed(object sender, TextChangedEventArgs e) {
             string q = TxtSearch.Text.Trim();
