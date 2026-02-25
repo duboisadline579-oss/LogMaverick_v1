@@ -20,7 +20,8 @@ namespace LogMaverick.Views {
             if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버를 먼저 선택하세요"; return; }
             VM.IsLoading = true;
             try {
-                var tree = await System.Threading.Tasks.Task.Run(() => FileService.GetRemoteTree(VM.SelectedServer));
+                var server = VM.SelectedServer;
+                var tree = await System.Threading.Tasks.Task.Run(() => FileService.GetRemoteTree(server));
                 FileTree.ItemsSource = tree;
                 VM.IsConnected = true; VM.IsLoading = false;
                 VM.StatusMessage = "✅ 연결됨 — 📁 파일을 더블클릭하세요";
