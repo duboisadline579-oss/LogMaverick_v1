@@ -112,15 +112,13 @@
                         <Button Grid.Column="1" Content="✕" Click="ClearFilter_Click" Width="24" Height="34" Background="#1A1A1A" Foreground="#888" BorderThickness="0"/>
                     </Grid>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
-                        <Button Content="ALL" Click="Level_Click" Tag="ALL" Width="38" Height="34" Background="{Binding LvAllColor}" Foreground="#FFFFFF" BorderBrush="#444" Margin="0,0,2,0" ToolTip="모든 로그 표시"/>
-                        <Button Content="ERR" Click="Level_Click" Tag="ERROR" Width="38" Height="34" Background="{Binding LvErrColor}" Foreground="#FF8080" BorderBrush="#444" Margin="0,0,2,0" ToolTip="ERROR/CRITICAL만"/>
-                        <Button Content="EXC" Click="Level_Click" Tag="EXCEPTION" Width="38" Height="34" Background="{Binding LvExcColor}" Foreground="#CC88FF" BorderBrush="#444" Margin="0,0,2,0" ToolTip="EXCEPTION만"/>
-                        <Button Content="SYS" Click="Level_Click" Tag="SYSTEM" Width="38" Height="34" Background="{Binding LvSysColor}" Foreground="#88CCFF" BorderBrush="#444" Margin="0,0,6,0" ToolTip="SYSTEM만"/>
+                        <Button Content="{Binding LevelFilterText}" Width="60" Height="34" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,6,0" ToolTip="우클릭: 로그 레벨 필터 선택"><Button.ContextMenu><ContextMenu><MenuItem Header="ALL - 전체" Click="Level_Click" Tag="ALL"/><MenuItem Header="ERR - 에러/크리티컬" Click="Level_Click" Tag="ERROR"/><MenuItem Header="EXC - 예외" Click="Level_Click" Tag="EXCEPTION"/><MenuItem Header="SYS - 시스템" Click="Level_Click" Tag="SYSTEM"/></ContextMenu></Button.ContextMenu></Button>
                         <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="34" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold" ToolTip="로그 수신 일시정지/재개"/>
                         <Button Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="60" Height="34" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="자동스크롤 ON/OFF"/>
                         <Button Content="EXPORT" Click="Export_Click" Width="65" Height="34" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="현재 탭 저장"/>
                         <Button Content="ALL↓" Click="ExportAll_Click" Width="45" Height="34" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="전체 저장"/>
                         <Button Content="CLEAR" Click="Clear_Click" Width="60" Height="34" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" ToolTip="로그 초기화"/>
+                        <Button Content="⊞ 컬럼" Click="ManageColumns_Click" Width="60" Height="34" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="4,0,0,0" ToolTip="컬럼 표시/숨기기 관리"/>
                     </StackPanel>
                 </Grid>
             </Border>

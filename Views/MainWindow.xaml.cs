@@ -23,7 +23,7 @@ namespace LogMaverick.Views {
             try {
                 var server = VM.SelectedServer;
                 var tree = await System.Threading.Tasks.Task.Run(() => FileService.GetRemoteTree(server));
-                FileTree.ItemsSource = tree;
+                VM.SetTree(tree); FileTree.ItemsSource = VM.FilteredTree;
                 VM.IsConnected = true; VM.IsLoading = false;
                 VM.StatusMessage = "✅ 연결됨 — 📁 파일을 더블클릭하세요";
             } catch (Exception ex) {
@@ -40,19 +40,11 @@ namespace LogMaverick.Views {
         private void TreeSearch_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e) {
             string q = TxtTreeSearch.Text.Trim();
             TreeSearchHint.Visibility = string.IsNullOrEmpty(q) ? Visibility.Visible : Visibility.Collapsed;
-            if (string.IsNullOrEmpty(q)) return;
-            FilterTreeView(FileTree.Items, q);
+            VM.SearchTree(q);
         }
-        private bool FilterTreeView(System.Windows.Controls.ItemCollection items, string q) {
-            bool any = false;
-            foreach (var i in items) {
-                if (i is LogMaverick.Models.FileNode node) {
-                    bool match = node.Name.Contains(q, StringComparison.OrdinalIgnoreCase);
-                    bool childMatch = node.Children.Any(c => c.Name.Contains(q, StringComparison.OrdinalIgnoreCase));
-                    if (match || childMatch) { any = true; }
-                }
-            }
-            return any;
+        private void ClearTreeSearch_Click(object sender, RoutedEventArgs e) {
+            TxtTreeSearch.Text = ""; TreeSearchHint.Visibility = Visibility.Visible; VM.SearchTree("");
+        }
         }
         private void ClearTreeSearch_Click(object sender, RoutedEventArgs e) {
             TxtTreeSearch.Text = "";
@@ -61,7 +53,7 @@ namespace LogMaverick.Views {
         private void Refresh_Click(object sender, RoutedEventArgs e) {
             if (!VM.IsConnected) { VM.StatusMessage = "⚠ 먼저 CONNECT 버튼으로 연결하세요"; return; }
             try {
-                FileTree.ItemsSource = FileService.GetRemoteTree(VM.SelectedServer);
+                var t = FileService.GetRemoteTree(VM.SelectedServer); VM.SetTree(t); FileTree.ItemsSource = VM.FilteredTree;
                 VM.StatusMessage = "🔄 파일 목록 새로고침 완료";
             } catch (Exception ex) { VM.StatusMessage = $"❌ 새로고침 실패: {ex.Message}"; }
         }
@@ -94,7 +86,8 @@ namespace LogMaverick.Views {
                 VM.AddFilterHistory(VM.FilterText);
         }
         private void Level_Click(object sender, RoutedEventArgs e) {
-            if (sender is Button btn) VM.LevelFilter = btn.Tag?.ToString() ?? "ALL";
+            string tag = (sender as FrameworkElement)?.Tag?.ToString() ?? (sender as MenuItem)?.Tag?.ToString() ?? "ALL";
+            VM.LevelFilter = tag; VM.StatusMessage = $"🔍 필터: {tag}";
         }
         private void Export_Click(object sender, RoutedEventArgs e) {
             if (MainTabs.SelectedItem is TabItem tab) VM.ExportLogs(tab.Header?.ToString() ?? "");
@@ -165,9 +158,18 @@ namespace LogMaverick.Views {
                 } catch (Exception ex) { MessageBox.Show("복원 실패: " + ex.Message); }
             }
         }
+        private void ManageColumns_Click(object sender, RoutedEventArgs e) {
+            if (MainTabs.SelectedContent is not ListView lv) return;
+            if (lv.View is not GridView gv) return;
+            var cols = new System.Collections.Generic.List<(string, System.Windows.Controls.GridViewColumn)>();
+            string[] names = { "Time", "TID", "Type", "Category", "Message" };
+            for (int i = 0; i < gv.Columns.Count && i < names.Length; i++)
+                cols.Add((names[i], gv.Columns[i]));
+            new ColumnManagerWindow(cols) { Owner = this }.ShowDialog();
+        }
         private void ErrorBox_Click(object sender, RoutedEventArgs e) {
             VM.ResetErrors();
-            new ErrorWindow(VM.ErrorHistory) { Owner = this }.Show();
+            new ErrorWindow(VM.ErrorHistory, VM.AlertKeywords) { Owner = this }.Show();
         }
         private void ConfigException_Click(object sender, RoutedEventArgs e) =>
             new ConfigWindow(VM.Servers, VM.AlertKeywords) { Owner = this }.ShowDialog();

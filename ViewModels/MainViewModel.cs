@@ -35,6 +35,8 @@ namespace LogMaverick.ViewModels {
         public ObservableCollection<string> AlertKeywords { get; } = new();
         public ObservableCollection<string> FilterHistory { get; } = new();
         public Dictionary<string, string> LastFiles { get; } = new();
+        private List<FileNode> _fullTree = new();
+        public ObservableCollection<FileNode> FilteredTree { get; } = new();
         public Dictionary<string, double> ColumnWidths { get; } = new() {
             ["Time"] = 90, ["TID"] = 70, ["Type"] = 80, ["Message"] = 730
         };
@@ -48,11 +50,12 @@ namespace LogMaverick.ViewModels {
         public bool IsNotLoading => !_isLoading;
         public string ConnectedFile { get => _connectedFile; set { _connectedFile = value; OnPropertyChanged(); } }
         public string FilterText { get => _filterText; set { _filterText = value; OnPropertyChanged(); ApplyFilter(); } }
-        public string LevelFilter { get => _levelFilter; set { _levelFilter = value; OnPropertyChanged(); OnPropertyChanged(nameof(LvAllColor)); OnPropertyChanged(nameof(LvErrColor)); OnPropertyChanged(nameof(LvExcColor)); OnPropertyChanged(nameof(LvSysColor)); ApplyFilter(); } }
+        public string LevelFilter { get => _levelFilter; set { _levelFilter = value; OnPropertyChanged(); OnPropertyChanged(nameof(LvAllColor)); OnPropertyChanged(nameof(LvErrColor)); OnPropertyChanged(nameof(LvExcColor)); OnPropertyChanged(nameof(LvSysColor)); OnPropertyChanged(nameof(LevelFilterText)); ApplyFilter(); } }
         public string LvAllColor => _levelFilter == "ALL" ? "#007AFF" : "#2A2A2A";
         public string LvErrColor => _levelFilter == "ERROR" ? "#FF4500" : "#2A2A2A";
         public string LvExcColor => _levelFilter == "EXCEPTION" ? "#9933FF" : "#2A2A2A";
         public string LvSysColor => _levelFilter == "SYSTEM" ? "#0088CC" : "#2A2A2A";
+        public string LevelFilterText => $"필터:{_levelFilter}";
         public string PauseStatusText => IsPaused ? "▶ RESUME" : "⏸ PAUSE";
         public string PauseButtonColor => IsPaused ? "#CC4400" : "#007AFF";
         public string ConnectButtonText => IsLoading ? "⏳ 로딩 중..." : IsConnected ? "⏹  DISCONNECT" : "▶  CONNECT";
@@ -180,6 +183,24 @@ namespace LogMaverick.ViewModels {
                 AlertKeywords = AlertKeywords.ToList(), FilterHistory = FilterHistory.ToList(),
                 LastFiles = LastFiles, ColumnWidths = ColumnWidths
             });
+        }
+        public void SetTree(List<FileNode> tree) {
+            _fullTree = tree; FilteredTree.Clear();
+            foreach (var n in tree) FilteredTree.Add(n);
+        }
+        public void SearchTree(string q) {
+            FilteredTree.Clear();
+            if (string.IsNullOrEmpty(q)) { foreach (var n in _fullTree) FilteredTree.Add(n); return; }
+            foreach (var n in _fullTree) {
+                bool match = n.Name.Contains(q, StringComparison.OrdinalIgnoreCase);
+                var matchedChildren = n.Children.Where(c => c.Name.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+                if (match) { FilteredTree.Add(n); }
+                else if (matchedChildren.Any()) {
+                    var copy = new FileNode { Name = n.Name, FullPath = n.FullPath, IsDirectory = true };
+                    foreach (var c in matchedChildren) copy.Children.Add(c);
+                    FilteredTree.Add(copy);
+                }
+            }
         }
         public void ClearAll() {
             MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear();
