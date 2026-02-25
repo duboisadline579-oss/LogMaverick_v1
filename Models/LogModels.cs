@@ -32,6 +32,8 @@ namespace LogMaverick.Models {
         public string FullPath { get; set; } = "";
         public bool IsDirectory { get; set; }
         public string Icon => IsDirectory ? "📁" : "📄";
+        public string IconColor => IsDirectory ? "#FFD700" : "#4DA6FF";
+        public string NameColor => IsDirectory ? "#FFDD88" : "#DDDDDD";
         public System.Collections.ObjectModel.ObservableCollection<FileNode> Children { get; set; } = new();
     }
 }
