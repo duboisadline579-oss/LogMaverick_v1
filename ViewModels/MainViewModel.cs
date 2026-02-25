@@ -36,7 +36,7 @@ namespace LogMaverick.ViewModels {
         public ObservableCollection<string> FilterHistory { get; } = new();
         public ServerConfig SelectedServer { get => _selectedServer; set { _selectedServer = value; OnPropertyChanged(); } }
         public string StatusMessage { get => _statusMessage; set { _statusMessage = value; OnPropertyChanged(); } }
-        public bool IsPaused { get => _isPaused; set { _isPaused = value; OnPropertyChanged(); OnPropertyChanged(nameof(PauseStatusText)); } }
+        public bool IsPaused { get => _isPaused; set { _isPaused = value; OnPropertyChanged(); OnPropertyChanged(nameof(PauseStatusText)); OnPropertyChanged(nameof(PauseButtonColor)); } }
         public bool AutoScroll { get => _autoScroll; set { _autoScroll = value; OnPropertyChanged(); OnPropertyChanged(nameof(AutoScrollText)); } }
         public string AutoScrollText => _autoScroll ? "⬇ AUTO" : "⬇ OFF";
         public bool IsConnected { get => _isConnected; set { _isConnected = value; OnPropertyChanged(); OnPropertyChanged(nameof(ConnectionStatusText)); OnPropertyChanged(nameof(ConnectionStatusColor)); OnPropertyChanged(nameof(ConnectButtonText)); OnPropertyChanged(nameof(ConnectButtonColor)); } }
@@ -46,6 +46,7 @@ namespace LogMaverick.ViewModels {
         public string FilterText { get => _filterText; set { _filterText = value; OnPropertyChanged(); ApplyFilter(); } }
         public string LevelFilter { get => _levelFilter; set { _levelFilter = value; OnPropertyChanged(); ApplyFilter(); } }
         public string PauseStatusText => IsPaused ? "▶ RESUME" : "⏸ PAUSE";
+        public string PauseButtonColor => IsPaused ? "#CC4400" : "#007AFF";
         public string ConnectButtonText => IsLoading ? "⏳ 로딩 중..." : IsConnected ? "⏹  DISCONNECT" : "▶  CONNECT";
         public string ConnectButtonColor => IsLoading ? "#888888" : IsConnected ? "#FF4500" : "#007AFF";
         public string ConnectionStatusText => IsConnected ? "● CONNECTED" : IsLoading ? "⏳ 연결 중..." : "○ DISCONNECTED";

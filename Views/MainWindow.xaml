@@ -105,7 +105,7 @@
                         <Button Content="ERR" Click="Level_Click" Tag="ERROR" Width="38" Height="34" Background="#2A2A2A" Foreground="#FF6B6B" BorderBrush="#444" Margin="0,0,2,0" ToolTip="ERROR만"/>
                         <Button Content="EXC" Click="Level_Click" Tag="EXCEPTION" Width="38" Height="34" Background="#2A2A2A" Foreground="#CC88FF" BorderBrush="#444" Margin="0,0,2,0" ToolTip="EXCEPTION만"/>
                         <Button Content="SYS" Click="Level_Click" Tag="SYSTEM" Width="38" Height="34" Background="#2A2A2A" Foreground="#88CCFF" BorderBrush="#444" Margin="0,0,6,0" ToolTip="SYSTEM만"/>
-                        <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="34" Background="{Binding IsPaused, Converter={StaticResource PauseColorConverter}}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold" ToolTip="로그 수신 일시정지/재개"/>
+                        <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="34" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold" ToolTip="로그 수신 일시정지/재개"/>
                         <Button Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="60" Height="34" Background="#2A2A2A" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="자동 스크롤 켜기/끄기"/>
                         <Button Content="EXPORT" Click="Export_Click" Width="65" Height="34" Background="#2A2A2A" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="현재 탭 로그 파일 저장"/>
                         <Button Content="ALL↓" Click="ExportAll_Click" Width="45" Height="34" Background="#2A2A2A" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="전체 로그 파일 저장"/>
