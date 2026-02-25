@@ -32,6 +32,32 @@ namespace LogMaverick.Views {
                 MessageBox.Show($"연결 실패\n\n원인: {ex.Message}\n\n확인:\n• Host/IP\n• Port (기본 22)\n• Username/Password\n• SSH 서비스 실행 여부\n• 방화벽 정책", "연결 실패", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void Hide_Click(object sender, RoutedEventArgs e) {
+            bool hidden = LeftCol.Width.Value < 10;
+            LeftCol.Width = hidden ? new GridLength(300) : new GridLength(0);
+            BtnHide.Content = hidden ? "◀" : "▶";
+        }
+        private void TreeSearch_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e) {
+            string q = TxtTreeSearch.Text.Trim();
+            TreeSearchHint.Visibility = string.IsNullOrEmpty(q) ? Visibility.Visible : Visibility.Collapsed;
+            if (string.IsNullOrEmpty(q)) return;
+            FilterTreeView(FileTree.Items, q);
+        }
+        private bool FilterTreeView(System.Windows.Controls.ItemCollection items, string q) {
+            bool any = false;
+            foreach (var i in items) {
+                if (i is LogMaverick.Models.FileNode node) {
+                    bool match = node.Name.Contains(q, StringComparison.OrdinalIgnoreCase);
+                    bool childMatch = node.Children.Any(c => c.Name.Contains(q, StringComparison.OrdinalIgnoreCase));
+                    if (match || childMatch) { any = true; }
+                }
+            }
+            return any;
+        }
+        private void ClearTreeSearch_Click(object sender, RoutedEventArgs e) {
+            TxtTreeSearch.Text = "";
+            TreeSearchHint.Visibility = Visibility.Visible;
+        }
         private void Refresh_Click(object sender, RoutedEventArgs e) {
             if (!VM.IsConnected) { VM.StatusMessage = "⚠ 먼저 CONNECT 버튼으로 연결하세요"; return; }
             try {
@@ -124,7 +150,8 @@ namespace LogMaverick.Views {
         }
         private void Backup_Click(object sender, RoutedEventArgs e) {
             try {
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "LogMaverick_backup.json");
+                string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backups"); Directory.CreateDirectory(dir);
+                string path = Path.Combine(dir, $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.json");
                 ConfigService.Backup(path);
                 VM.StatusMessage = $"✅ 백업 완료: {path}";
             } catch (Exception ex) { MessageBox.Show("백업 실패: " + ex.Message); }
