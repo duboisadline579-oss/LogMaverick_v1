@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Data;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -32,6 +33,10 @@ namespace LogMaverick.ViewModels {
         public ObservableCollection<LogEntry> ErrorHistory { get; } = new();
         public ObservableCollection<LogEntry> BookmarkedLogs { get; } = new();
         public ObservableCollection<string> ExcludedTids { get; } = new();
+        public ICollectionView MachineView { get; private set; }
+        public ICollectionView ProcessView { get; private set; }
+        public ICollectionView DriverView { get; private set; }
+        public ICollectionView OtherView { get; private set; }
         public ObservableCollection<KeywordRule> AlertKeywords { get; } = new();
         public ObservableCollection<string> FilterHistory { get; } = new();
         public Dictionary<string, string> LastFiles { get; } = new();
@@ -79,6 +84,14 @@ namespace LogMaverick.ViewModels {
         public string DriverFlash => _newDriver > 0 ? "#1A3A6A" : "Transparent";
         public string OtherFlash => _newOther > 0 ? "#1A3A6A" : "Transparent";
         public MainViewModel() {
+            MachineView = CollectionViewSource.GetDefaultView(MachineLogs);
+            ProcessView = CollectionViewSource.GetDefaultView(ProcessLogs);
+            DriverView  = CollectionViewSource.GetDefaultView(DriverLogs);
+            OtherView   = CollectionViewSource.GetDefaultView(OtherLogs);
+            MachineView.Filter = LogFilter;
+            ProcessView.Filter = LogFilter;
+            DriverView.Filter  = LogFilter;
+            OtherView.Filter   = LogFilter;
             var settings = ConfigService.Load();
             foreach(var s in settings.Servers) Servers.Add(s);
             foreach(var t in settings.ExcludedTids) ExcludedTids.Add(t);
@@ -117,22 +130,23 @@ namespace LogMaverick.ViewModels {
                 else if (s.StartsWith("❌") || s.StartsWith("🔌")) { IsConnected = false; IsLoading = false; }
             });
         }
-        private bool MatchesFilter(LogEntry log) {
+        private bool LogFilter(object obj) {
+            if (obj is not LogEntry log) return false;
             if (!string.IsNullOrEmpty(FilterText) && !log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase)) return false;
             if (LevelFilter == "ERROR" && log.Type != LogType.Error && log.Type != LogType.Critical) return false;
             if (LevelFilter == "EXCEPTION" && log.Type != LogType.Exception) return false;
             if (LevelFilter == "SYSTEM" && log.Type != LogType.System) return false;
+            if (LevelFilter == "WARN" && log.Type != LogType.Warn) return false;
+            if (LevelFilter == "INFO" && log.Type != LogType.Info) return false;
             return true;
         }
+        private bool MatchesFilter(LogEntry log) => LogFilter(log);
         private void ApplyFilter() {
-            foreach (var log in MachineLogs.Concat(ProcessLogs).Concat(DriverLogs).Concat(OtherLogs)) {
-                bool hit = !string.IsNullOrEmpty(FilterText) && log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
-                log.IsHighlighted = hit;
-                log.IsVisible = string.IsNullOrEmpty(FilterText) || hit;
-            }
-            OnPropertyChanged(nameof(MachineLogs));
-            OnPropertyChanged(nameof(ProcessLogs));
-            OnPropertyChanged(nameof(DriverLogs));
+            MachineView?.Refresh();
+            ProcessView?.Refresh();
+            DriverView?.Refresh();
+            OtherView?.Refresh();
+        }
             OnPropertyChanged(nameof(OtherLogs));
         }
         public void AddFilterHistory(string text) {

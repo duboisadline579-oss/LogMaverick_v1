@@ -8,6 +8,7 @@ namespace LogMaverick.Views {
         private ObservableCollection<LogEntry> _errors;
         public ObservableCollection<KeywordRule> Keywords { get; }
         public ErrorWindow(ObservableCollection<LogEntry> errors, ObservableCollection<KeywordRule> keywords) {
+            this.Closed += (s, e) => Owner?.Activate();
             InitializeComponent();
             _errors = errors;
             Keywords = keywords;

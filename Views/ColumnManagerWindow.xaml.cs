@@ -7,6 +7,7 @@ namespace LogMaverick.Views {
         private List<(string Name, GridViewColumn Col)> _cols;
         private List<CheckBox> _checks = new();
         public ColumnManagerWindow(List<(string, GridViewColumn)> cols) {
+            this.Closed += (s, e) => Owner?.Activate();
             InitializeComponent();
             _cols = cols;
             foreach (var (name, col) in cols) {

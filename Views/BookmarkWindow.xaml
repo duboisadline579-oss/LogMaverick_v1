@@ -1,0 +1,23 @@
+<Window x:Class="LogMaverick.Views.BookmarkWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="🔖 북마크" Height="500" Width="950" ShowInTaskbar="False"
+        Background="#0D0D0D" WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Grid Margin="12">
+        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <ListView x:Name="BmList" Background="#0A0A0A" Foreground="#DDDDDD" BorderThickness="0" MouseDoubleClick="Bm_DoubleClick" VirtualizingStackPanel.IsVirtualizing="True">
+            <ListView.View><GridView>
+                <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="80"/>
+                <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}" Width="80"/>
+                <GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/>
+                <GridViewColumn Header="Category" DisplayMemberBinding="{Binding Category}" Width="80"/>
+                <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="570"/>
+            </GridView></ListView.View>
+        </ListView>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Content="🗑 선택 삭제" Click="Del_Click" Width="100" Height="28" Background="#2A2A2A" Foreground="#FF4500" BorderBrush="#FF4500" BorderThickness="1" Margin="0,0,8,0"/>
+            <Button Content="CLOSE" Click="Close_Click" Width="80" Height="28" Background="#007AFF" Foreground="White" BorderThickness="0"/>
+        </StackPanel>
+    </Grid>
+</Window>

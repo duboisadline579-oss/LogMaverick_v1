@@ -13,6 +13,7 @@ namespace LogMaverick.Views {
         private MainViewModel _vm;
 
         public TidTraceWindow(string tid) {
+            this.Closed += (s, e) => Owner?.Activate();
             InitializeComponent();
             _tid = tid;
             this.Title = $"TID Explorer - {tid}";
@@ -36,8 +37,10 @@ namespace LogMaverick.Views {
         }
         private void OnLogsChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) {
             if (e.NewItems == null) return;
-            foreach (LogEntry log in e.NewItems)
-                if (log.Tid == _tid) { _logs.Insert(0, log); UpdateCount(); }
+            Dispatcher.InvokeAsync(() => {
+                foreach (LogEntry log in e.NewItems)
+                    if (log.Tid == _tid) { _logs.Insert(0, log); UpdateCount(); }
+            });
         }
         private void UpdateCount() => TxtCount.Text = $"{_logs.Count}건";
         private void Search_Changed(object sender, TextChangedEventArgs e) {

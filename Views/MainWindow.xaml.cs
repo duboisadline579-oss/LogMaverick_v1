@@ -127,11 +127,11 @@ namespace LogMaverick.Views {
         }
         private void Log_DoubleClick(object sender, MouseButtonEventArgs e) {
             if ((sender as ListView)?.SelectedItem is LogEntry log)
-                new LogDetailWindow(log) { Owner = this }.Show();
+                new LogDetailWindow(log) { Owner = this }.Show(); this.Activate();
         }
         private void TraceTid_Click(object sender, RoutedEventArgs e) {
             if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log)
-                new TidTraceWindow(log.Tid) { Owner = this }.Show();
+                new TidTraceWindow(log.Tid) { Owner = this }.Show(); this.Activate();
         }
         private void Copy_Click(object sender, RoutedEventArgs e) {
             if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log)
@@ -141,6 +141,8 @@ namespace LogMaverick.Views {
             if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log)
                 VM.ToggleBookmark(log);
         }
+        private void ShowBookmarks_Click(object sender, RoutedEventArgs e) =>
+            new BookmarkWindow(VM.BookmarkedLogs) { Owner = this }.Show();
         private void Exclude_Click(object sender, RoutedEventArgs e) {
             if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log)
                 if (!VM.ExcludedTids.Contains(log.Tid)) { VM.ExcludedTids.Add(log.Tid); VM.StatusMessage = $"🚫 TID {log.Tid} 제외됨"; }
