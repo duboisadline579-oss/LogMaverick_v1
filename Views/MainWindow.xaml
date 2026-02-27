@@ -59,8 +59,8 @@
                         </StackPanel>
                     </Border>
                     <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                        <Button Content="💾 백업" Click="Backup_Click" Height="24" Width="130" Background="#1E1E1E" Foreground="#AAAAAA" BorderBrush="#444" FontSize="10" Margin="0,0,4,0"/>
-                        <Button Content="📂 복원" Click="Restore_Click" Height="24" Width="130" Background="#1E1E1E" Foreground="#AAAAAA" BorderBrush="#444" FontSize="10"/>
+                        <Button Content="💾 백업" Click="Backup_Click" Height="24" Width="130" Background="#1E1E1E" Foreground="#AAAAAA" BorderBrush="#444" FontSize="10" Margin="0,0,4,0" ToolTip="설정 백업"/>
+                        <Button Content="📂 복원" Click="Restore_Click" Height="24" Width="130" Background="#1E1E1E" Foreground="#AAAAAA" BorderBrush="#444" FontSize="10" ToolTip="설정 복원"/>
                     </StackPanel>
                 </StackPanel>
                 <Grid Grid.Row="1" Margin="0,10,0,0">
@@ -68,11 +68,11 @@
                     <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBlock Text="FILE EXPLORER" Foreground="#777" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" Content="🔄" Click="Refresh_Click" Width="26" Height="22" Background="#1E1E1E" Foreground="#888" BorderBrush="#333" ToolTip="새로고침"/>
+                        <Button Grid.Column="1" Content="🔄" Click="Refresh_Click" Width="26" Height="22" Background="#1E1E1E" Foreground="#888" BorderBrush="#333" ToolTip="파일목록 새로고침 (스트리밍 유지)"/>
                     </Grid>
                     <Grid Grid.Row="1" Margin="0,0,0,4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="26"/></Grid.ColumnDefinitions>
-                        <TextBox x:Name="TxtTreeSearch" Background="#0D0D0D" Foreground="#DDDDDD" BorderBrush="#444" BorderThickness="1" Height="26" VerticalContentAlignment="Center" Padding="6,0" FontSize="11" TextChanged="TreeSearch_Changed"/>
+                        <TextBox x:Name="TxtTreeSearch" Background="#0D0D0D" Foreground="#DDDDDD" BorderBrush="#444" BorderThickness="1" Height="26" VerticalContentAlignment="Center" Padding="6,0" FontSize="11" TextChanged="TreeSearch_Changed" ToolTip="파일/폴더명 검색. 하위 경로까지 검색됨"/>
                         <TextBlock Grid.Column="0" x:Name="TreeSearchHint" Text="🔍 폴더/파일 검색..." Foreground="#555" FontSize="11" VerticalAlignment="Center" Margin="8,0" IsHitTestVisible="False"/>
                         <Button Grid.Column="1" Content="✕" Click="ClearTreeSearch_Click" Width="24" Height="26" Background="#1A1A1A" Foreground="#888" BorderThickness="0"/>
                     </Grid>
@@ -93,15 +93,16 @@
                                 <HierarchicalDataTemplate ItemsSource="{Binding Children}">
                                     <StackPanel Orientation="Horizontal" ToolTip="{Binding FullPath}">
                                         <TextBlock Text="{Binding Icon}" Margin="0,0,4,0" FontSize="11" Foreground="{Binding IconColor}"/>
-                                        <TextBlock Text="{Binding Name}" FontSize="11" Foreground="{Binding NameColor2}"/><TextBlock Text="{Binding StreamingIcon}" FontSize="11" Foreground="#00FF88" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Name}" FontSize="11" Foreground="{Binding NameColor2}"/>
+                                        <TextBlock Text="{Binding StreamingIcon}" FontSize="11" Foreground="#00FF88" FontWeight="Bold"/>
                                     </StackPanel>
                                 </HierarchicalDataTemplate>
                             </TreeView.ItemTemplate>
                         </TreeView>
                     </Border>
-                    <TextBlock Grid.Row="3" x:Name="TxtFileGuide" Text="📄 파일 선택 후 더블클릭으로 스트리밍" Foreground="#666" FontSize="10" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    <TextBlock Grid.Row="3" x:Name="TxtFileGuide" Text="📄 더블클릭: 스트리밍 | 📁 더블클릭: 최신파일 | 우클릭: 접기/펴기" Foreground="#666" FontSize="10" TextWrapping="Wrap" Margin="0,4,0,0"/>
                 </Grid>
-                <Button Grid.Row="2" Click="ErrorBox_Click" Background="{Binding ErrorFlash}" Visibility="{Binding ErrorVisibility}" Margin="0,8,0,0" BorderThickness="0" Padding="8,6" ToolTip="클릭: 에러 히스토리">
+                <Button Grid.Row="2" Click="ErrorBox_Click" Background="{Binding ErrorFlash}" Visibility="{Binding ErrorVisibility}" Margin="0,8,0,0" BorderThickness="0" Padding="8,6" ToolTip="클릭: 에러 히스토리 및 색상 키워드 관리">
                     <Grid Width="250">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="⚠ EXCEPTIONS " Foreground="#FF8080" FontWeight="Bold" FontSize="12"/>
@@ -115,29 +116,29 @@
         </Border>
         <Grid Grid.Column="1" Grid.Row="0">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <Button x:Name="BtnShowPanel" Grid.Row="0" Content="▶" Click="Hide_Click" Width="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,4,0,0" Background="#1E1E1E" Foreground="#888" BorderBrush="#333" FontSize="11" ToolTip="패널 열기" Visibility="Collapsed" Panel.ZIndex="99"/>
+            <Button x:Name="BtnShowPanel" Grid.Row="0" Content="▶" Click="Hide_Click" Width="20" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,6,0,0" Background="#1E1E1E" Foreground="#888" BorderBrush="#333" FontSize="11" ToolTip="패널 열기" Visibility="Collapsed" Panel.ZIndex="99"/>
             <Border Grid.Row="0" Background="#141414" Padding="10,6" BorderBrush="#2A2A2A" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="26"/></Grid.ColumnDefinitions>
-                        <ComboBox x:Name="FilterCombo" IsEditable="True" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding FilterHistory}" Background="#1A1A1A" Foreground="#DDDDDD" BorderBrush="#444" Height="32" ToolTip="키워드 필터. Enter로 저장" KeyDown="Filter_KeyDown"/>
-                        <Button Grid.Column="1" Content="✕" Click="ClearFilter_Click" Width="24" Height="32" Background="#1A1A1A" Foreground="#888" BorderThickness="0"/>
+                        <ComboBox x:Name="FilterCombo" IsEditable="True" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding FilterHistory}" Background="#1A1A1A" Foreground="#DDDDDD" BorderBrush="#444" Height="32" KeyDown="Filter_KeyDown" ToolTip="키워드 필터: 입력후 Enter로 저장. ▼ 클릭: 히스토리. 예) ERROR, Timeout"/>
+                        <Button Grid.Column="1" Content="✕" Click="ClearFilter_Click" Width="24" Height="32" Background="#1A1A1A" Foreground="#888" BorderThickness="0" ToolTip="필터 초기화"/>
                     </Grid>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="6,0,0,0">
-                        <Button Content="{Binding LevelFilterText}" Width="70" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="우클릭: 레벨 필터">
+                        <Button Content="{Binding LevelFilterText}" Width="70" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="우클릭으로 레벨 필터 선택">
                             <Button.ContextMenu><ContextMenu>
-                                <MenuItem Header="✅ ALL" Click="Level_Click" Tag="ALL"/>
-                                <MenuItem Header="🔴 ERR" Click="Level_Click" Tag="ERROR"/>
-                                <MenuItem Header="🟣 EXC" Click="Level_Click" Tag="EXCEPTION"/>
-                                <MenuItem Header="🔵 SYS" Click="Level_Click" Tag="SYSTEM"/>
+                                <MenuItem Header="✅ ALL - 전체" Click="Level_Click" Tag="ALL"/>
+                                <MenuItem Header="🔴 ERR - 에러/크리티컬" Click="Level_Click" Tag="ERROR"/>
+                                <MenuItem Header="🟣 EXC - 예외" Click="Level_Click" Tag="EXCEPTION"/>
+                                <MenuItem Header="🔵 SYS - 시스템" Click="Level_Click" Tag="SYSTEM"/>
                             </ContextMenu></Button.ContextMenu>
                         </Button>
-                        <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="32" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold" ToolTip="⏸ PAUSE: 화면 스크롤 멈춤 + 로그 버퍼 유지Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="32" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold"/>#x0a;▶ RESUME: 쌓인 로그 한번에 표시"/>
-                        <Button Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="⬇ AUTO: 새 로그 올때마다 자동 스크롤Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0"/>#x0a;⬇ OFF: 스크롤 위치 고정 (과거 로그 탐색시 사용)"/>
-                        <Button Content="EXPORT" Click="Export_Click" Width="60" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="현재 탭(MACHINE/PROCESS 등) 로그만 txt 저장"/>
-                        <Button Content="ALL↓" Click="ExportAll_Click" Width="42" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="MACHINE+PROCESS+DRIVER+OTHERS 전체 로그 시간순 txt 저장"/>
-                        <Button Content="CLEAR" Click="Clear_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444"/>
+                        <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="32" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold" ToolTip="PAUSE: 로그 수신 중단. RESUME: 중단구간 로그 한번에 수신"/>
+                        <Button Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="AUTO: 새 로그 수신시 자동 스크롤. OFF: 스크롤 고정 (과거 탐색)"/>
+                        <Button Content="EXPORT" Click="Export_Click" Width="60" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="현재 탭 로그만 txt 저장"/>
+                        <Button Content="ALL↓" Click="ExportAll_Click" Width="42" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="전체 탭 로그를 시간순으로 txt 저장"/>
+                        <Button Content="CLEAR" Click="Clear_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" ToolTip="화면 로그 초기화 (파일 영향 없음)"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -169,15 +170,3 @@
                         <Setter Property="ContextMenu" Value="{StaticResource HeaderMenu}"/>
                     </Style>
                 </TabControl.Resources>
-                <TabItem Header="{Binding MachineTab}" Tag="MACHINE" Background="{Binding MachineFlash}"><ListView ItemsSource="{Binding MachineLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="90"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}" Width="80"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="730"/></GridView></ListView.View></ListView></TabItem>
-                <TabItem Header="{Binding ProcessTab}" Tag="PROCESS" Background="{Binding ProcessFlash}"><ListView ItemsSource="{Binding ProcessLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="90"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}" Width="80"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="730"/></GridView></ListView.View></ListView></TabItem>
-                <TabItem Header="{Binding DriverTab}" Tag="DRIVER" Background="{Binding DriverFlash}"><ListView ItemsSource="{Binding DriverLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="90"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}" Width="80"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="730"/></GridView></ListView.View></ListView></TabItem>
-                <TabItem Header="{Binding OtherTab}" Tag="OTHERS" Background="{Binding OtherFlash}"><ListView ItemsSource="{Binding OtherLogs, NotifyOnTargetUpdated=True}" TargetUpdated="LogList_TargetUpdated" MouseDoubleClick="Log_DoubleClick"><ListView.View><GridView><GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="90"/><GridViewColumn Header="TID" DisplayMemberBinding="{Binding Tid}" Width="70"/><GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}" Width="80"/><GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="730"/></GridView></ListView.View></ListView></TabItem>
-            </TabControl>
-        </Grid>
-        <StatusBar Grid.Row="1" Grid.ColumnSpan="2" Background="#141414" BorderBrush="#2A2A2A" BorderThickness="0,1,0,0">
-            <StatusBarItem><TextBlock Text="{Binding LogCountText}" Foreground="#666" FontSize="10" Margin="5,0"/></StatusBarItem>
-            <StatusBarItem><TextBlock Text="{Binding StatusMessage}" Foreground="#CCCCCC" FontSize="11" Margin="5,0"/></StatusBarItem>
-        </StatusBar>
-    </Grid>
-</Window>
