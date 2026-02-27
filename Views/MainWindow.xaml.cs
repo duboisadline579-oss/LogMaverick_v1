@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,7 +18,8 @@ namespace LogMaverick.Views {
             new ConfigWindow(VM.Servers, VM.AlertKeywords, VM.ExcludedTids) { Owner = this }.ShowDialog();
         private async void Connect_Click(object sender, RoutedEventArgs e) {
             if (VM.IsConnected) {
-                VM.Disconnect(); FileTree.ItemsSource = null; TxtTreeSearch.Text = ""; VM.SearchTree("");
+                VM.Disconnect(); FileTree.ItemsSource = null;
+                TxtTreeSearch.Text = ""; VM.SearchTree("");
                 TxtFileGuide.Text = "📄 파일을 선택하면 경로가 표시됩니다"; return;
             }
             if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버를 먼저 선택하세요"; return; }
@@ -31,7 +33,7 @@ namespace LogMaverick.Views {
             } catch (Exception ex) {
                 VM.IsLoading = false; VM.IsConnected = false;
                 VM.StatusMessage = $"❌ 연결 실패: {ex.Message}";
-                MessageBox.Show($"연결 실패\n\n원인: {ex.Message}\n\n확인:\n• Host/IP\n• Port\n• Username/Password\n• SSH 서비스\n• 방화벽", "연결 실패", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"연결 실패\n원인: {ex.Message}\n\n확인:\n• Host/IP\n• Port\n• Username/Password\n• SSH\n• 방화벽", "연결 실패", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void Hide_Click(object sender, RoutedEventArgs e) {
@@ -47,74 +49,6 @@ namespace LogMaverick.Views {
         }
         private void ClearTreeSearch_Click(object sender, RoutedEventArgs e) {
             TxtTreeSearch.Text = ""; TreeSearchHint.Visibility = Visibility.Visible; VM.SearchTree("");
-        }
-        private void Refresh_Click(object sender, RoutedEventArgs e) {
-            if (!VM.IsConnected) { VM.StatusMessage = "⚠ 먼저 CONNECT 버튼으로 연결하세요"; return; }
-            try {
-                var t = FileService.GetRemoteTree(VM.SelectedServer); VM.SetTree(t); FileTree.ItemsSource = VM.FilteredTree;
-                VM.StatusMessage = "🔄 파일 목록 새로고침 완료";
-            } catch (Exception ex) { VM.StatusMessage = $"❌ 새로고침 실패: {ex.Message}"; }
-        }
-        private void FileTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {
-            if (FileTree.SelectedItem is FileNode node && !node.IsDirectory)
-                TxtFileGuide.Text = $"📄 {node.FullPath} — 더블클릭하여 스트리밍 시작";
-            else if (FileTree.SelectedItem is FileNode dir && dir.IsDirectory)
-                TxtFileGuide.Text = $"📁 {dir.FullPath}";
-        }
-        private async void File_DoubleClick(object sender, MouseButtonEventArgs e) {
-            if (FileTree.SelectedItem is not FileNode node) return;
-            if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버가 선택되지 않았습니다"; return; }
-            if (node.IsDirectory) {
-                var latest = node.Children.Where(c => !c.IsDirectory).OrderByDescending(c => c.Name).FirstOrDefault();
-                if (latest == null) { VM.StatusMessage = "⚠ 폴더에 .log 파일이 없습니다"; return; }
-                VM.StatusMessage = $"🔄 최신 파일 자동 선택: {latest.Name}";
-                try { await VM.ConnectAsync(VM.SelectedServer, latest.FullPath); }
-                catch (Exception ex) { VM.StatusMessage = $"❌ 실패: {ex.Message}"; }
-            } else {
-                try {
-                    VM.StatusMessage = $"🔄 스트리밍 시작: {node.Name}...";
-                    await VM.ConnectAsync(VM.SelectedServer, node.FullPath);
-                } catch (Exception ex) {
-                    VM.StatusMessage = $"❌ 스트리밍 실패: {ex.Message}";
-                    MessageBox.Show($"파일 스트리밍 실패
-
-파일: {node.FullPath}
-원인: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-                    VM.StatusMessage = $"🔄 스트리밍 시작: {node.Name}...";
-                    await VM.ConnectAsync(VM.SelectedServer, node.FullPath);
-                } catch (Exception ex) {
-                    VM.StatusMessage = $"❌ 스트리밍 실패: {ex.Message}";
-                    MessageBox.Show($"파일 스트리밍 실패
-
-파일: {node.FullPath}
-원인: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-        }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) { VM.SaveSettings(); VM.Disconnect(); }
-        private void Pause_Click(object sender, RoutedEventArgs e) => VM.IsPaused = !VM.IsPaused;
-        private void AutoScroll_Click(object sender, RoutedEventArgs e) => VM.AutoScroll = !VM.AutoScroll;
-        private void Clear_Click(object sender, RoutedEventArgs e) => VM.ClearAll();
-        private void ClearErrors_Click(object sender, RoutedEventArgs e) { VM.ErrorHistory.Clear(); VM.ResetErrors(); }
-        private void ClearFilter_Click(object sender, RoutedEventArgs e) => VM.FilterText = "";
-        private void Filter_KeyDown(object sender, KeyEventArgs e) {
-            if (e.Key == Key.Enter && !string.IsNullOrEmpty(VM.FilterText)) VM.AddFilterHistory(VM.FilterText);
-        }
-        private void Level_Click(object sender, RoutedEventArgs e) {
-            string tag = (sender as FrameworkElement)?.Tag?.ToString() ?? "ALL";
-            VM.LevelFilter = tag; VM.StatusMessage = $"🔍 레벨 필터: {tag}";
-        }
-        private void Export_Click(object sender, RoutedEventArgs e) {
-            if (MainTabs.SelectedItem is TabItem tab) VM.ExportLogs(tab.Header?.ToString() ?? "");
-        }
-        private void ExportAll_Click(object sender, RoutedEventArgs e) => VM.ExportAll();
-        private void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            if (MainTabs?.SelectedItem is TabItem tab && tab?.Header != null)
-                try { VM.ResetTab(tab.Header.ToString()); } catch { }
         }
         private void Log_DoubleClick(object sender, MouseButtonEventArgs e) {
             if ((sender as ListView)?.SelectedItem is LogEntry log)
@@ -141,7 +75,7 @@ namespace LogMaverick.Views {
                 lv.ScrollIntoView(lv.Items[0]);
         }
         private async void Tab_RightClick(object sender, MouseButtonEventArgs e) {
-            if (!VM.IsConnected) { VM.StatusMessage = "⚠ 먼저 CONNECT 버튼으로 연결하세요"; return; }
+            if (!VM.IsConnected) { VM.StatusMessage = "⚠ 먼저 CONNECT로 연결하세요"; return; }
             var tab = MainTabs.SelectedItem as TabItem; if (tab == null) return;
             string cat = tab.Tag?.ToString() ?? "MACHINE";
             var menu = new ContextMenu();
@@ -164,30 +98,6 @@ namespace LogMaverick.Views {
                 cols.Add((names[i], gv.Columns[i]));
             new ColumnManagerWindow(cols) { Owner = this }.ShowDialog();
         }
-        private void Backup_Click(object sender, RoutedEventArgs e) {
-            try {
-                string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backups");
-                Directory.CreateDirectory(dir);
-                string path = Path.Combine(dir, $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.json");
-                ConfigService.Backup(path); VM.StatusMessage = $"✅ 백업 완료: {path}";
-            } catch (Exception ex) { MessageBox.Show("백업 실패: " + ex.Message); }
-        }
-        private void Restore_Click(object sender, RoutedEventArgs e) {
-            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "JSON|*.json", Title = "설정 파일 선택" };
-            if (dlg.ShowDialog() == true) {
-                try { ConfigService.Restore(dlg.FileName); VM.StatusMessage = "✅ 복원 완료 — 재시작 필요"; }
-                catch (Exception ex) { MessageBox.Show("복원 실패: " + ex.Message); }
-            }
-        }
-        private void ManageColumns_Click(object sender, RoutedEventArgs e) => Header_RightClick(sender, null);
-        private void ErrorBox_Click(object sender, RoutedEventArgs e) {
-            VM.ResetErrors();
-            new ErrorWindow(VM.ErrorHistory, VM.AlertKeywords) { Owner = this }.Show();
-        }
-        private void ConfigException_Click(object sender, RoutedEventArgs e) =>
-            new ConfigWindow(VM.Servers, VM.AlertKeywords, VM.ExcludedTids) { Owner = this }.ShowDialog();
-    }
-}
         private void Backup_Click(object sender, RoutedEventArgs e) {
             try {
                 string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backups");
