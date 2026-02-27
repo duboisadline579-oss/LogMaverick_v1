@@ -214,6 +214,13 @@ namespace LogMaverick.ViewModels {
             } catch (Exception ex) { MessageBox.Show("Export 실패: " + ex.Message); }
         }
         public void ResetTab(string tab) {
+        public void RemoveLogsByTid(string tid) {
+            WinApp.Current?.Dispatcher.InvokeAsync(() => {
+                foreach (var col in new[] { MachineLogs, ProcessLogs, DriverLogs, OtherLogs })
+                    for (int i = col.Count - 1; i >= 0; i--)
+                        if (col[i].Tid == tid) col.RemoveAt(i);
+            });
+        }
             if (tab.Contains("MACHINE")) NewMachine = 0;
             else if (tab.Contains("PROCESS")) NewProcess = 0;
             else if (tab.Contains("DRIVER")) NewDriver = 0;

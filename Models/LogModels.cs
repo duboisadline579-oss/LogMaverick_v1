@@ -16,14 +16,18 @@ namespace LogMaverick.Models {
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 
-    public class LogEntry {
+    public class LogEntry : INotifyPropertyChanged {
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPC(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
         public DateTime Time { get; set; } = DateTime.Now;
         public string Tid { get; set; } = "0000";
         public string Message { get; set; } = "";
         public string Category { get; set; } = "OTHERS";
         public LogType Type { get; set; } = LogType.System;
-        public bool IsHighlighted { get; set; } = false;
-        public bool IsBookmarked { get; set; } = false;
+        private bool _isHighlighted;
+        public bool IsHighlighted { get => _isHighlighted; set { _isHighlighted = value; OnPC(nameof(IsHighlighted)); OnPC(nameof(Color)); } }
+        private bool _isBookmarked;
+        public bool IsBookmarked { get => _isBookmarked; set { _isBookmarked = value; OnPC(nameof(IsBookmarked)); OnPC(nameof(Color)); } }
         public bool IsVisible { get; set; } = true;
         public bool IsNewMarker { get; set; } = false;
         public string Color => IsHighlighted ? "#FFD700" : Type == LogType.Error ? "#FF4500" : Type == LogType.Exception ? "#FF00FF" : Type == LogType.Critical ? "#FF0000" : Type == LogType.Warn ? "#FFD700" : Type == LogType.Info ? "#87CEEB" : "#DCDCDC";

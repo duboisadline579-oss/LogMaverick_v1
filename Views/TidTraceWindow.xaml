@@ -20,7 +20,7 @@
             <TextBlock Grid.Column="0" Text="🔍 검색..." Foreground="#555" FontSize="12" VerticalAlignment="Center" Margin="10,0" IsHitTestVisible="False" x:Name="SearchHint"/>
             <TextBlock Grid.Column="1" x:Name="TxtCount" Foreground="#888" FontSize="11" VerticalAlignment="Center" Margin="8,0"/>
         </Grid>
-        <ListView x:Name="LogList" Grid.Row="2" Background="#0F0F0F" Foreground="#DDD" BorderThickness="0">
+        <ListView x:Name="LogList" Grid.Row="2" MouseDoubleClick="Log_DoubleClick" Background="#0F0F0F" Foreground="#DDD" BorderThickness="0">
             <ListView.View><GridView>
                 <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="90"/>
                 <GridViewColumn Header="Category" DisplayMemberBinding="{Binding Category}" Width="90"/>

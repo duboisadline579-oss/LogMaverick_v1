@@ -146,8 +146,13 @@ namespace LogMaverick.Views {
         private void ShowBookmarks_Click(object sender, RoutedEventArgs e) =>
             new BookmarkWindow(VM.BookmarkedLogs) { Owner = this }.Show();
         private void Exclude_Click(object sender, RoutedEventArgs e) {
-            if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log)
-                if (!VM.ExcludedTids.Contains(log.Tid)) { VM.ExcludedTids.Add(log.Tid); VM.StatusMessage = $"🚫 TID {log.Tid} 제외됨"; }
+            if (MainTabs.SelectedContent is ListView lv && lv.SelectedItem is LogEntry log) {
+                if (!VM.ExcludedTids.Contains(log.Tid)) {
+                    VM.ExcludedTids.Add(log.Tid);
+                    VM.RemoveLogsByTid(log.Tid);
+                    VM.StatusMessage = $"🚫 TID {log.Tid} 제외됨 (기존 로그 제거)";
+                }
+            }
         }
         private void LogList_TargetUpdated(object sender, System.Windows.Data.DataTransferEventArgs e) {
             if (VM.AutoScroll && !VM.IsPaused && sender is ListView lv && lv.Items.Count > 0)
@@ -158,15 +163,19 @@ namespace LogMaverick.Views {
             var tab = MainTabs.SelectedItem as TabItem; if (tab == null) return;
             string cat = tab.Tag?.ToString() ?? "MACHINE";
             var menu = new ContextMenu();
-            var i1 = new MenuItem { Header = $"📂 {cat} 파일 지정" };
+            var i1 = new MenuItem { Header = $"📂 {cat} 파일 지정 (파일트리에서 선택 후)" };
             i1.Click += async (s, ev) => {
                 if (FileTree.SelectedItem is FileNode node && !node.IsDirectory)
                     await VM.ConnectSessionAsync(VM.SelectedServer, cat, node.FullPath);
-                else VM.StatusMessage = "⚠ 파일트리에서 .log 파일을 선택하세요";
+                else VM.StatusMessage = "⚠ 파일트리에서 .log 파일을 먼저 선택하세요";
             };
             var i2 = new MenuItem { Header = $"⏹ {cat} 스트리밍 중지" };
             i2.Click += (s, ev) => { VM.StopSession(cat); VM.StatusMessage = $"⏹ {cat} 중지됨"; };
-            menu.Items.Add(i1); menu.Items.Add(i2); menu.IsOpen = true;
+            var sep = new Separator();
+            var i3 = new MenuItem { Header = "🔖 북마크 목록 보기" };
+            i3.Click += (s, ev) => new BookmarkWindow(VM.BookmarkedLogs) { Owner = this }.Show();
+            menu.Items.Add(i1); menu.Items.Add(i2); menu.Items.Add(sep); menu.Items.Add(i3);
+            menu.IsOpen = true;
         }
         private void Header_RightClick(object sender, MouseButtonEventArgs e) {
             if (MainTabs.SelectedContent is not ListView lv) return;

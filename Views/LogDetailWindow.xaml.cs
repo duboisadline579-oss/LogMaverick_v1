@@ -100,7 +100,14 @@ namespace LogMaverick.Views {
                         else _allItems.Add(new KvItem { Key = $"{key}[{i}]", Value = arr[i].ToString(), KeyColor = kc });
                     }
                 } else {
-                    string val = p.Value.ToString();
+                    string rawVal = p.Value.ToString();
+                    string val = rawVal;
+                    int xi = FindXmlStart(rawVal);
+                    if (xi >= 0) { string pretty = PrettyXml(rawVal.Substring(xi)); if (pretty != null) val = (xi > 0 ? rawVal.Substring(0, xi) + "
+" : "") + pretty; }
+                    string vc  = rawVal.ToUpper().Contains("ERROR") || rawVal.ToUpper().Contains("FAIL") ? "#FF6B6B"
+                               : rawVal.ToUpper().Contains("OK") || rawVal.ToUpper().Contains("SUCCESS") ? "#00C853"
+                               : "#DDDDDD";
                     string vc  = val.ToUpper().Contains("ERROR") || val.ToUpper().Contains("FAIL") ? "#FF6B6B"
                                : val.ToUpper().Contains("OK")    || val.ToUpper().Contains("SUCCESS") ? "#00C853"
                                : "#DDDDDD";

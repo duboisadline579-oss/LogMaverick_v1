@@ -56,6 +56,10 @@ namespace LogMaverick.Views {
             var text = string.Join("\n", _logs.Select(l => $"[{l.Time:HH:mm:ss}] [{l.Category}] {l.Message}"));
             if (!string.IsNullOrEmpty(text)) Clipboard.SetText(text);
         }
+        private void Log_DoubleClick(object sender, MouseButtonEventArgs e) {
+            if (LogList.SelectedItem is LogEntry log)
+                new LogDetailWindow(log) { Owner = this }.Show();
+        }
         private void Close_Click(object sender, RoutedEventArgs e) => this.Close();
         protected override void OnClosed(EventArgs e) {
             if (_vm != null) {
