@@ -6,10 +6,11 @@ using LogMaverick.Models;
 namespace LogMaverick.Views {
     public partial class ErrorWindow : Window {
         private ObservableCollection<LogEntry> _errors;
-        private ObservableCollection<string> _keywords;
-        public ErrorWindow(ObservableCollection<LogEntry> errors, ObservableCollection<string> keywords) {
+        public ObservableCollection<KeywordRule> Keywords { get; }
+        public ErrorWindow(ObservableCollection<LogEntry> errors, ObservableCollection<KeywordRule> keywords) {
             InitializeComponent();
-            _errors = errors; _keywords = keywords;
+            _errors = errors;
+            Keywords = keywords;
             ErrorList.ItemsSource = errors;
             KeywordList.ItemsSource = keywords;
         }
@@ -17,12 +18,17 @@ namespace LogMaverick.Views {
             if (ErrorList.SelectedItem is LogEntry log)
                 new LogDetailWindow(log) { Owner = this }.Show();
         }
+        private void Keyword_DoubleClick(object sender, MouseButtonEventArgs e) { }
         private void AddKeyword_Click(object sender, RoutedEventArgs e) {
             string kw = TxtKeyword.Text.Trim();
-            if (!string.IsNullOrEmpty(kw) && !_keywords.Contains(kw)) { _keywords.Add(kw); TxtKeyword.Text = ""; }
+            string color = TxtColor.Text.Trim();
+            if (string.IsNullOrEmpty(kw)) return;
+            if (!color.StartsWith("#")) color = "#FF4500";
+            Keywords.Add(new KeywordRule { Keyword = kw, Color = color, Notify = ChkNotify.IsChecked == true });
+            TxtKeyword.Text = "";
         }
         private void DelKeyword_Click(object sender, RoutedEventArgs e) {
-            if (KeywordList.SelectedItem is string kw) _keywords.Remove(kw);
+            if (KeywordList.SelectedItem is KeywordRule kw) Keywords.Remove(kw);
         }
         private void Clear_Click(object sender, RoutedEventArgs e) => _errors.Clear();
         private void Close_Click(object sender, RoutedEventArgs e) => this.Close();

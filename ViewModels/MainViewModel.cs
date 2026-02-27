@@ -32,7 +32,7 @@ namespace LogMaverick.ViewModels {
         public ObservableCollection<LogEntry> ErrorHistory { get; } = new();
         public ObservableCollection<LogEntry> BookmarkedLogs { get; } = new();
         public ObservableCollection<string> ExcludedTids { get; } = new();
-        public ObservableCollection<string> AlertKeywords { get; } = new();
+        public ObservableCollection<KeywordRule> AlertKeywords { get; } = new();
         public ObservableCollection<string> FilterHistory { get; } = new();
         public Dictionary<string, string> LastFiles { get; } = new();
         private List<FileNode> _fullTree = new();
@@ -82,7 +82,7 @@ namespace LogMaverick.ViewModels {
             var settings = ConfigService.Load();
             foreach(var s in settings.Servers) Servers.Add(s);
             foreach(var t in settings.ExcludedTids) ExcludedTids.Add(t);
-            foreach(var k in settings.AlertKeywords) AlertKeywords.Add(k);
+            foreach(var k in settings.AlertKeywords) AlertKeywords.Add(new KeywordRule { Keyword = k, Color = "#FF4500", Notify = true });
             foreach(var f in settings.FilterHistory) FilterHistory.Add(f);
             foreach(var lf in settings.LastFiles) LastFiles[lf.Key] = lf.Value;
             if (settings.ColumnWidths != null)
@@ -107,7 +107,7 @@ namespace LogMaverick.ViewModels {
                         if (ErrorHistory.Count > 1000) ErrorHistory.RemoveAt(ErrorHistory.Count - 1);
                         NewErrors++; OnPropertyChanged(nameof(ErrorVisibility));
                     }
-                    if (AlertKeywords.Any(k => log.Message.Contains(k, StringComparison.OrdinalIgnoreCase)))
+                    if (AlertKeywords.Any(k => log.Message.Contains(k.Keyword, StringComparison.OrdinalIgnoreCase)))
                         StatusMessage = $"🔔 [{log.Category}] {log.Message.Substring(0, Math.Min(60, log.Message.Length))}";
                 });
             };
@@ -199,7 +199,7 @@ namespace LogMaverick.ViewModels {
         public void SaveSettings() {
             ConfigService.Save(new AppSettings {
                 Servers = Servers.ToList(), ExcludedTids = ExcludedTids.ToList(),
-                AlertKeywords = AlertKeywords.ToList(), FilterHistory = FilterHistory.ToList(),
+                AlertKeywords = AlertKeywords.Select(k => k.Keyword).ToList(), FilterHistory = FilterHistory.ToList(),
                 LastFiles = LastFiles, ColumnWidths = ColumnWidths
             });
         }
@@ -211,15 +211,28 @@ namespace LogMaverick.ViewModels {
             FilteredTree.Clear();
             if (string.IsNullOrEmpty(q)) { foreach (var n in _fullTree) FilteredTree.Add(n); return; }
             foreach (var n in _fullTree) {
-                bool match = n.Name.Contains(q, StringComparison.OrdinalIgnoreCase);
-                var matchedChildren = n.Children.Where(c => c.Name.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
-                if (match) { FilteredTree.Add(n); }
-                else if (matchedChildren.Any()) {
-                    var copy = new FileNode { Name = n.Name, FullPath = n.FullPath, IsDirectory = true };
-                    foreach (var c in matchedChildren) copy.Children.Add(c);
-                    FilteredTree.Add(copy);
-                }
+                var result = FilterNode(n, q);
+                if (result != null) FilteredTree.Add(result);
             }
+        }
+        private FileNode? FilterNode(FileNode node, string q) {
+            bool match = node.Name.Contains(q, StringComparison.OrdinalIgnoreCase);
+            var matchedChildren = new System.Collections.ObjectModel.ObservableCollection<FileNode>();
+            foreach (var c in node.Children) {
+                var r = FilterNode(c, q);
+                if (r != null) matchedChildren.Add(r);
+            }
+            if (match) {
+                var copy = new FileNode { Name = node.Name, FullPath = node.FullPath, IsDirectory = node.IsDirectory, IsStreaming = node.IsStreaming };
+                foreach (var c in node.Children) copy.Children.Add(c);
+                return copy;
+            }
+            if (matchedChildren.Any()) {
+                var copy = new FileNode { Name = node.Name, FullPath = node.FullPath, IsDirectory = node.IsDirectory };
+                foreach (var c in matchedChildren) copy.Children.Add(c);
+                return copy;
+            }
+            return null;
         }
         public void ClearAll() {
             MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear();

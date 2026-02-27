@@ -77,7 +77,7 @@
                         <Button Grid.Column="1" Content="✕" Click="ClearTreeSearch_Click" Width="24" Height="26" Background="#1A1A1A" Foreground="#888" BorderThickness="0"/>
                     </Grid>
                     <Border Grid.Row="2" BorderBrush="#333" BorderThickness="1">
-                        <TreeView x:Name="FileTree" Background="#0A0A0A" BorderThickness="0" MouseDoubleClick="File_DoubleClick" SelectedItemChanged="FileTree_SelectedItemChanged" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
+                        <TreeView x:Name="FileTree" Background="#0A0A0A" BorderThickness="0" MouseDoubleClick="File_DoubleClick" SelectedItemChanged="FileTree_SelectedItemChanged" MouseRightButtonUp="FileTree_RightClick" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
                             <TreeView.Resources>
                                 <Style TargetType="TreeViewItem">
                                     <Setter Property="IsExpanded" Value="True"/>
@@ -133,10 +133,10 @@
                                 <MenuItem Header="🔵 SYS" Click="Level_Click" Tag="SYSTEM"/>
                             </ContextMenu></Button.ContextMenu>
                         </Button>
-                        <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="32" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold"/>
-                        <Button Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0"/>
-                        <Button Content="EXPORT" Click="Export_Click" Width="60" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0"/>
-                        <Button Content="ALL↓" Click="ExportAll_Click" Width="42" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0"/>
+                        <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="32" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold" ToolTip="⏸ PAUSE: 화면 스크롤 멈춤 + 로그 버퍼 유지Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="32" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold"/>#x0a;▶ RESUME: 쌓인 로그 한번에 표시"/>
+                        <Button Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="⬇ AUTO: 새 로그 올때마다 자동 스크롤Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0"/>#x0a;⬇ OFF: 스크롤 위치 고정 (과거 로그 탐색시 사용)"/>
+                        <Button Content="EXPORT" Click="Export_Click" Width="60" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="현재 탭(MACHINE/PROCESS 등) 로그만 txt 저장"/>
+                        <Button Content="ALL↓" Click="ExportAll_Click" Width="42" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="MACHINE+PROCESS+DRIVER+OTHERS 전체 로그 시간순 txt 저장"/>
                         <Button Content="CLEAR" Click="Clear_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444"/>
                     </StackPanel>
                 </Grid>

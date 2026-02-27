@@ -15,7 +15,7 @@ namespace LogMaverick.Views {
         private bool _leftPanelVisible = true;
         public MainWindow() { InitializeComponent(); this.DataContext = new MainViewModel(); }
         private void Config_Click(object sender, RoutedEventArgs e) =>
-            new ConfigWindow(VM.Servers, VM.AlertKeywords, VM.ExcludedTids) { Owner = this }.ShowDialog();
+            new ConfigWindow(VM.Servers) { Owner = this }.ShowDialog();
         private async void Connect_Click(object sender, RoutedEventArgs e) {
             if (VM.IsConnected) {
                 VM.Disconnect(); FileTree.ItemsSource = null;
@@ -49,6 +49,27 @@ namespace LogMaverick.Views {
         }
         private void ClearTreeSearch_Click(object sender, RoutedEventArgs e) {
             TxtTreeSearch.Text = ""; TreeSearchHint.Visibility = Visibility.Visible; VM.SearchTree("");
+        }
+        private void FileTree_RightClick(object sender, MouseButtonEventArgs e) {
+            var menu = new ContextMenu();
+            var expand = new MenuItem { Header = "▶ 모두 펴기" };
+            expand.Click += (s, ev) => SetAllExpanded(FileTree.Items, true);
+            var collapse = new MenuItem { Header = "◀ 모두 접기" };
+            collapse.Click += (s, ev) => SetAllExpanded(FileTree.Items, false);
+            menu.Items.Add(expand); menu.Items.Add(collapse);
+            menu.IsOpen = true; e.Handled = true;
+        }
+        private void SetAllExpanded(System.Windows.Controls.ItemCollection items, bool expanded) {
+            foreach (var item in items) {
+                var container = FileTree.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
+                if (container != null) { container.IsExpanded = expanded; SetAllExpandedItem(container, expanded); }
+            }
+        }
+        private void SetAllExpandedItem(TreeViewItem parent, bool expanded) {
+            foreach (var item in parent.Items) {
+                var container = parent.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
+                if (container != null) { container.IsExpanded = expanded; SetAllExpandedItem(container, expanded); }
+            }
         }
         private void Refresh_Click(object sender, RoutedEventArgs e) {
             if (!VM.IsConnected) { VM.StatusMessage = "⚠ 먼저 CONNECT로 연결하세요"; return; }
@@ -173,6 +194,6 @@ namespace LogMaverick.Views {
             new ErrorWindow(VM.ErrorHistory, VM.AlertKeywords) { Owner = this }.Show();
         }
         private void ConfigException_Click(object sender, RoutedEventArgs e) =>
-            new ConfigWindow(VM.Servers, VM.AlertKeywords, VM.ExcludedTids) { Owner = this }.ShowDialog();
+            new ConfigWindow(VM.Servers) { Owner = this }.ShowDialog();
     }
 }
