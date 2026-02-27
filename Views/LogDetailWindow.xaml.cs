@@ -34,7 +34,7 @@ namespace LogMaverick.Views {
                 LogType.Info     => Brushes.SkyBlue,
                 _                => Brushes.LightGreen
             };
-            TxtRaw.Text = log.Message;
+            
             ParseAndDisplay(log.Message);
         }
         private void ParseAndDisplay(string message) {
@@ -48,21 +48,21 @@ namespace LogMaverick.Views {
                     var token = JToken.Parse(trimmed.Substring(jsonStart));
                     if (token is JObject obj) ParseJsonObject(obj, "");
                     else if (token is JArray arr) _allItems.Add(new KvItem { Key = "array", Value = arr.ToString(Newtonsoft.Json.Formatting.Indented) });
-                    TxtPretty.Text = token.ToString(Newtonsoft.Json.Formatting.Indented);
+                    
                 } else if (xmlStart >= 0) {
                     if (xmlStart > 0) _allItems.Add(new KvItem { Key = "§ prefix", Value = trimmed.Substring(0, xmlStart).Trim(), KeyColor = "#888" });
                     string xmlPart = trimmed.Substring(xmlStart);
                     string pretty  = PrettyXml(xmlPart);
-                    TxtPretty.Text = pretty ?? xmlPart;
+                    
                     if (pretty != null) {
                         var doc = new XmlDocument(); doc.LoadXml(xmlPart);
                         ParseXmlFlat(doc.DocumentElement, "");
                     } else { ParseRaw(xmlPart); }
                 } else {
                     ParseRaw(trimmed);
-                    TxtPretty.Text = trimmed;
+                    
                 }
-            } catch { ParseRaw(trimmed); TxtPretty.Text = trimmed; }
+            } catch { ParseRaw(trimmed);  }
             KvList.ItemsSource = _allItems;
             TxtMatchCount.Text = $"{_allItems.Count}개";
         }

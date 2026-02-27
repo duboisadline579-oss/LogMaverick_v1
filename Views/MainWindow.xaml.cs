@@ -90,19 +90,25 @@ namespace LogMaverick.Views {
         private async void File_DoubleClick(object sender, MouseButtonEventArgs e) {
             if (FileTree.SelectedItem is not FileNode node) return;
             if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버가 선택되지 않았습니다"; return; }
+            FileNode target = node;
             if (node.IsDirectory) {
                 var latest = node.Children.Where(c => !c.IsDirectory).OrderByDescending(c => c.Name).FirstOrDefault();
-                if (latest == null) { VM.StatusMessage = "⚠ 폴더에 .log 파일이 없습니다"; return; }
-                VM.StatusMessage = $"🔄 최신 파일 자동 선택: {latest.Name}";
-                try { await VM.ConnectAsync(VM.SelectedServer, latest.FullPath); }
-                catch (Exception ex) { VM.StatusMessage = $"❌ 실패: {ex.Message}"; }
-            } else {
-                try {
-                    VM.StatusMessage = $"🔄 스트리밍 시작: {node.Name}...";
-                    await VM.ConnectAsync(VM.SelectedServer, node.FullPath);
-                } catch (Exception ex) {
-                    VM.StatusMessage = $"❌ 스트리밍 실패: {ex.Message}";
-                    MessageBox.Show($"스트리밍 실패\n파일: {node.FullPath}\n원인: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (latest == null) { VM.StatusMessage = "⚠ 폴더에 파일이 없습니다"; return; }
+                target = latest;
+            }
+            string fn = System.IO.Path.GetFileName(target.FullPath).ToLower();
+            string dp = target.FullPath.ToLower();
+            string cat = (fn.Contains("machine")||dp.Contains("machine")) ? "MACHINE"
+                       : (fn.Contains("process")||dp.Contains("process")) ? "PROCESS"
+                       : (fn.Contains("driver")||dp.Contains("driver"))  ? "DRIVER" : "OTHERS";
+            if (VM.SessionFiles.TryGetValue(cat, out var cur) && cur == target.FullPath) {
+                VM.StopSession(cat); VM.StatusMessage = $"⏹ {cat} 스트리밍 중지됨"; return;
+            }
+            try {
+                VM.StatusMessage = $"🔄 {cat} 스트리밍 시작: {target.Name}...";
+                await VM.ConnectSessionAsync(VM.SelectedServer, cat, target.FullPath);
+            } catch (Exception ex) { VM.StatusMessage = $"❌ 실패: {ex.Message}"; }
+        }
                 }
             }
         }
