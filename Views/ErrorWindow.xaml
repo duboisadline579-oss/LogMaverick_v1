@@ -21,7 +21,7 @@
             <TabItem Header="⚠ 에러 히스토리">
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                    <ListView x:Name="ErrorList" Background="#0A0A0A" Foreground="#DDDDDD" BorderThickness="0" MouseDoubleClick="Error_DoubleClick">
+                    <ListView x:Name="ErrorList" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling" Background="#0A0A0A" Foreground="#DDDDDD" BorderThickness="0" MouseDoubleClick="Error_DoubleClick">
                         <ListView.View><GridView>
                             <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time, StringFormat={}{0:HH:mm:ss}}" Width="90"/>
                             <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Type}" Width="90"/>

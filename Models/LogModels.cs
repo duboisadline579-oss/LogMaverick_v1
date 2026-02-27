@@ -27,13 +27,19 @@ namespace LogMaverick.Models {
         public string Color => IsHighlighted ? "#FFD700" : (Type == LogType.Error ? "#FF4500" : (Type == LogType.Exception ? "#FF00FF" : "#DCDCDC"));
     }
 
-    public class FileNode {
+    public class FileNode : INotifyPropertyChanged {
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(n));
         public string Name { get; set; } = "";
         public string FullPath { get; set; } = "";
         public bool IsDirectory { get; set; }
         public string Icon => IsDirectory ? "📁" : "📄";
         public string IconColor => IsDirectory ? "#FFD700" : "#4DA6FF";
         public string NameColor => IsDirectory ? "#FFDD88" : "#DDDDDD";
+        private bool _isStreaming;
+        public bool IsStreaming { get => _isStreaming; set { _isStreaming = value; OnPropertyChanged(nameof(StreamingIcon)); OnPropertyChanged(nameof(NameColor2)); } }
+        public string StreamingIcon => _isStreaming ? " ▶" : "";
+        public string NameColor2 => _isStreaming ? "#00FF88" : NameColor;
         public System.Collections.ObjectModel.ObservableCollection<FileNode> Children { get; set; } = new();
     }
 }

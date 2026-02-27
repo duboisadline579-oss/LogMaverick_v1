@@ -56,6 +56,14 @@
                 </Grid>
             </Grid>
         </TabItem>
+        <TabItem Header="🚫 제외 TID">
+            <Grid Margin="10">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <TextBlock Text="로그 수신에서 제외할 TID 목록" Foreground="#888" FontSize="11" Margin="0,0,0,8"/>
+                <ListBox x:Name="TidList" Grid.Row="1" Background="#1A1A1A" Foreground="White" BorderBrush="#333" BorderThickness="1"/>
+                <Button Grid.Row="2" Content="DELETE" Click="DelTid_Click" Width="70" Height="30" Background="#1A1A1A" Foreground="#FF4500" BorderBrush="#FF4500" BorderThickness="1" Margin="0,8,0,0" HorizontalAlignment="Left"/>
+            </Grid>
+        </TabItem>
     </TabControl>
 </Grid>
 </Window>

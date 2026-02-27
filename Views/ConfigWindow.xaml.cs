@@ -9,12 +9,15 @@ namespace LogMaverick.Views {
     public partial class ConfigWindow : Window {
         private ObservableCollection<ServerConfig> _servers;
         private ObservableCollection<string> _keywords;
-        public ConfigWindow(ObservableCollection<ServerConfig> servers, ObservableCollection<string> keywords = null) {
+        private ObservableCollection<string> _excludedTids;
+        public ConfigWindow(ObservableCollection<ServerConfig> servers, ObservableCollection<string> keywords = null, ObservableCollection<string> excludedTids = null) {
             InitializeComponent();
             _servers = servers;
             _keywords = keywords ?? new ObservableCollection<string>();
+            _excludedTids = excludedTids ?? new ObservableCollection<string>();
             SrvList.ItemsSource = _servers;
             KeywordList.ItemsSource = _keywords;
+            TidList.ItemsSource = _excludedTids;
         }
         private void SrvList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             if (SrvList.SelectedItem is ServerConfig s) {
@@ -41,16 +44,18 @@ namespace LogMaverick.Views {
             var settings = ConfigService.Load();
             settings.Servers = _servers.ToList();
             settings.AlertKeywords = _keywords.ToList();
+            settings.ExcludedTids = _excludedTids.ToList();
             ConfigService.Save(settings); this.Close();
         }
         private void AddKeyword_Click(object sender, RoutedEventArgs e) {
             string kw = TxtKeyword.Text.Trim();
-            if (!string.IsNullOrEmpty(kw) && !_keywords.Contains(kw)) {
-                _keywords.Add(kw); TxtKeyword.Text = "";
-            }
+            if (!string.IsNullOrEmpty(kw) && !_keywords.Contains(kw)) { _keywords.Add(kw); TxtKeyword.Text = ""; }
         }
         private void DelKeyword_Click(object sender, RoutedEventArgs e) {
             if (KeywordList.SelectedItem is string kw) _keywords.Remove(kw);
+        }
+        private void DelTid_Click(object sender, RoutedEventArgs e) {
+            if (TidList.SelectedItem is string tid) _excludedTids.Remove(tid);
         }
     }
 }

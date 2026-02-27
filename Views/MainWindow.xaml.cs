@@ -14,10 +14,10 @@ namespace LogMaverick.Views {
         private bool _leftPanelVisible = true;
         public MainWindow() { InitializeComponent(); this.DataContext = new MainViewModel(); }
         private void Config_Click(object sender, RoutedEventArgs e) =>
-            new ConfigWindow(VM.Servers, VM.AlertKeywords) { Owner = this }.ShowDialog();
+            new ConfigWindow(VM.Servers, VM.AlertKeywords, VM.ExcludedTids) { Owner = this }.ShowDialog();
         private async void Connect_Click(object sender, RoutedEventArgs e) {
             if (VM.IsConnected) {
-                VM.Disconnect(); FileTree.ItemsSource = null;
+                VM.Disconnect(); FileTree.ItemsSource = null; TxtTreeSearch.Text = ""; VM.SearchTree("");
                 TxtFileGuide.Text = "📄 파일을 선택하면 경로가 표시됩니다"; return;
             }
             if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버를 먼저 선택하세요"; return; }
@@ -38,6 +38,7 @@ namespace LogMaverick.Views {
             _leftPanelVisible = !_leftPanelVisible;
             LeftCol.Width = _leftPanelVisible ? new GridLength(300) : new GridLength(0);
             BtnHide.Content = _leftPanelVisible ? "◀" : "▶";
+            BtnShowPanel.Visibility = _leftPanelVisible ? Visibility.Collapsed : Visibility.Visible;
         }
         private void TreeSearch_Changed(object sender, TextChangedEventArgs e) {
             string q = TxtTreeSearch.Text.Trim();
@@ -61,16 +62,38 @@ namespace LogMaverick.Views {
                 TxtFileGuide.Text = $"📁 {dir.FullPath}";
         }
         private async void File_DoubleClick(object sender, MouseButtonEventArgs e) {
-            if (FileTree.SelectedItem is FileNode node && !node.IsDirectory) {
-                if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버가 선택되지 않았습니다"; return; }
+            if (FileTree.SelectedItem is not FileNode node) return;
+            if (VM.SelectedServer == null) { VM.StatusMessage = "⚠ 서버가 선택되지 않았습니다"; return; }
+            if (node.IsDirectory) {
+                var latest = node.Children.Where(c => !c.IsDirectory).OrderByDescending(c => c.Name).FirstOrDefault();
+                if (latest == null) { VM.StatusMessage = "⚠ 폴더에 .log 파일이 없습니다"; return; }
+                VM.StatusMessage = $"🔄 최신 파일 자동 선택: {latest.Name}";
+                try { await VM.ConnectAsync(VM.SelectedServer, latest.FullPath); }
+                catch (Exception ex) { VM.StatusMessage = $"❌ 실패: {ex.Message}"; }
+            } else {
                 try {
                     VM.StatusMessage = $"🔄 스트리밍 시작: {node.Name}...";
                     await VM.ConnectAsync(VM.SelectedServer, node.FullPath);
                 } catch (Exception ex) {
                     VM.StatusMessage = $"❌ 스트리밍 실패: {ex.Message}";
-                    MessageBox.Show($"파일 스트리밍 실패\n\n파일: {node.FullPath}\n원인: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"파일 스트리밍 실패
+
+파일: {node.FullPath}
+원인: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+                    VM.StatusMessage = $"🔄 스트리밍 시작: {node.Name}...";
+                    await VM.ConnectAsync(VM.SelectedServer, node.FullPath);
+                } catch (Exception ex) {
+                    VM.StatusMessage = $"❌ 스트리밍 실패: {ex.Message}";
+                    MessageBox.Show($"파일 스트리밍 실패
+
+파일: {node.FullPath}
+원인: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) { VM.SaveSettings(); VM.Disconnect(); }
         private void Pause_Click(object sender, RoutedEventArgs e) => VM.IsPaused = !VM.IsPaused;
@@ -162,7 +185,7 @@ namespace LogMaverick.Views {
             new ErrorWindow(VM.ErrorHistory, VM.AlertKeywords) { Owner = this }.Show();
         }
         private void ConfigException_Click(object sender, RoutedEventArgs e) =>
-            new ConfigWindow(VM.Servers, VM.AlertKeywords) { Owner = this }.ShowDialog();
+            new ConfigWindow(VM.Servers, VM.AlertKeywords, VM.ExcludedTids) { Owner = this }.ShowDialog();
     }
 }
         private void Backup_Click(object sender, RoutedEventArgs e) {
@@ -186,6 +209,6 @@ namespace LogMaverick.Views {
             new ErrorWindow(VM.ErrorHistory, VM.AlertKeywords) { Owner = this }.Show();
         }
         private void ConfigException_Click(object sender, RoutedEventArgs e) =>
-            new ConfigWindow(VM.Servers, VM.AlertKeywords) { Owner = this }.ShowDialog();
+            new ConfigWindow(VM.Servers, VM.AlertKeywords, VM.ExcludedTids) { Owner = this }.ShowDialog();
     }
 }

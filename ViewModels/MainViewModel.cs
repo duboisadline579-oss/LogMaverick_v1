@@ -61,6 +61,7 @@ namespace LogMaverick.ViewModels {
         public string ConnectButtonText => IsLoading ? "⏳ 로딩 중..." : IsConnected ? "⏹  DISCONNECT" : "▶  CONNECT";
         public string ConnectButtonColor => IsLoading ? "#888888" : IsConnected ? "#FF4500" : "#007AFF";
         public string ConnectionStatusText => IsConnected ? "● CONNECTED" : IsLoading ? "⏳ 연결 중..." : "○ DISCONNECTED";
+        public string LogCountText => $"M:{MachineLogs.Count} P:{ProcessLogs.Count} D:{DriverLogs.Count} O:{OtherLogs.Count} | ERR:{ErrorHistory.Count}";
         public string ConnectionStatusColor => IsConnected ? "#00C853" : IsLoading ? "#FFD700" : "#666666";
         public Visibility ErrorVisibility => ErrorHistory.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         public int NewMachine { get => _newMachine; set { _newMachine = value; OnPropertyChanged(); OnPropertyChanged(nameof(MachineTab)); OnPropertyChanged(nameof(MachineFlash)); } }
@@ -94,7 +95,7 @@ namespace LogMaverick.ViewModels {
                         "MACHINE" => MachineLogs, "DRIVER" => DriverLogs, "PROCESS" => ProcessLogs, _ => OtherLogs
                     };
                     target.Insert(0, log);
-                    if (target.Count > 5000) target.RemoveAt(target.Count - 1);
+                    if (target.Count > 5000) target.RemoveAt(target.Count - 1); OnPropertyChanged(nameof(LogCountText));
                     switch (log.Category?.ToUpper()) {
                         case "MACHINE": NewMachine++; break;
                         case "PROCESS": NewProcess++; break;
@@ -148,23 +149,41 @@ namespace LogMaverick.ViewModels {
         }
         public async Task ConnectAsync(ServerConfig s, string p) {
             ClearAll(); ConnectedFile = p;
-            string cat = p.ToLower().Contains("machine") ? "MACHINE" : p.ToLower().Contains("process") ? "PROCESS" : p.ToLower().Contains("driver") ? "DRIVER" : "OTHERS";
+            string fileName = System.IO.Path.GetFileName(p).ToLower();
+            string dirName = p.ToLower();
+            string cat = (fileName.Contains("machine") || dirName.Contains("machine")) ? "MACHINE" : (fileName.Contains("process") || dirName.Contains("process")) ? "PROCESS" : (fileName.Contains("driver") || dirName.Contains("driver")) ? "DRIVER" : "OTHERS";
             LastFiles[cat] = p; IsConnected = true;
+            SetStreamingFile(p, true);
+            await _engine.StartSessionAsync(s, cat, p);
             await _engine.StartSessionAsync(s, cat, p);
         }
-        public void Disconnect() { _engine.Dispose(); IsConnected = false; IsLoading = false; ConnectedFile = ""; SessionFiles.Clear(); ClearAll(); StatusMessage = "🔌 연결 해제됨"; }
+        public void SetStreamingFile(string path, bool streaming) {
+            var node = FindNode(_fullTree, path);
+            if (node != null) node.IsStreaming = streaming;
+        }
+        private FileNode? FindNode(System.Collections.Generic.List<FileNode> nodes, string path) {
+            foreach (var n in nodes) {
+                if (n.FullPath == path) return n;
+                var found = FindNode(new System.Collections.Generic.List<FileNode>(n.Children), path);
+                if (found != null) return found;
+            }
+            return null;
+        }
+        public void Disconnect() { SetStreamingFile(ConnectedFile, false); _engine.Dispose(); IsConnected = false; IsLoading = false; ConnectedFile = ""; SessionFiles.Clear(); ClearAll(); StatusMessage = "🔌 연결 해제됨"; }
         public void ExportLogs(string tab) {
             try {
                 var list = tab.Contains("MACHINE") ? MachineLogs : tab.Contains("PROCESS") ? ProcessLogs : tab.Contains("DRIVER") ? DriverLogs : OtherLogs;
                 if (!list.Any()) { StatusMessage = "⚠ 내보낼 로그가 없습니다"; return; }
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Log_{tab}_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
+                string exportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "exports"); Directory.CreateDirectory(exportDir);
+                string path = Path.Combine(exportDir, $"Log_{tab}_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
                 File.WriteAllLines(path, list.Select(l => $"[{l.Time:HH:mm:ss}] [{l.Tid}] {l.Message}"));
                 StatusMessage = $"✅ 저장: {path}";
             } catch (Exception ex) { MessageBox.Show("Export 실패: " + ex.Message); }
         }
         public void ExportAll() {
             try {
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), $"Log_ALL_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
+                string exportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "exports"); Directory.CreateDirectory(exportDir);
+                string path = Path.Combine(exportDir, $"Log_ALL_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
                 var all = MachineLogs.Concat(ProcessLogs).Concat(DriverLogs).Concat(OtherLogs).OrderByDescending(l => l.Time);
                 File.WriteAllLines(path, all.Select(l => $"[{l.Time:HH:mm:ss}] [{l.Category}] [{l.Tid}] {l.Message}"));
                 StatusMessage = $"✅ 전체 저장: {path}";
@@ -205,7 +224,7 @@ namespace LogMaverick.ViewModels {
         public void ClearAll() {
             MachineLogs.Clear(); ProcessLogs.Clear(); DriverLogs.Clear(); OtherLogs.Clear();
             ErrorHistory.Clear(); BookmarkedLogs.Clear();
-            NewMachine = 0; NewProcess = 0; NewDriver = 0; NewOther = 0; NewErrors = 0;
+            NewMachine = 0; NewProcess = 0; NewDriver = 0; NewOther = 0; NewErrors = 0; OnPropertyChanged(nameof(LogCountText));
             OnPropertyChanged(nameof(ErrorVisibility));
         }
     }
