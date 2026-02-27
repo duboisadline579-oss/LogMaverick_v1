@@ -140,21 +140,25 @@ namespace LogMaverick.ViewModels {
             StatusMessage = log.IsBookmarked ? $"🔖 북마크: {log.Message.Substring(0, Math.Min(40, log.Message.Length))}" : "북마크 해제됨";
         }
         public async Task ConnectSessionAsync(ServerConfig config, string category, string filePath) {
+            if (SessionFiles.TryGetValue(category, out var old)) SetStreamingFile(old, false);
             SessionFiles[category] = filePath; LastFiles[category] = filePath; IsConnected = true;
+            SetStreamingFile(filePath, true);
             await _engine.StartSessionAsync(config, category, filePath);
         }
+        }
         public void StopSession(string category) {
+            if (SessionFiles.TryGetValue(category, out var path)) SetStreamingFile(path, false);
             _engine.StopSession(category); SessionFiles.Remove(category);
             IsConnected = _engine.HasSession("MACHINE") || _engine.HasSession("PROCESS") || _engine.HasSession("DRIVER") || _engine.HasSession("OTHERS");
         }
         public async Task ConnectAsync(ServerConfig s, string p) {
+            if (!string.IsNullOrEmpty(ConnectedFile)) SetStreamingFile(ConnectedFile, false);
             ClearAll(); ConnectedFile = p;
             string fileName = System.IO.Path.GetFileName(p).ToLower();
             string dirName = p.ToLower();
             string cat = (fileName.Contains("machine") || dirName.Contains("machine")) ? "MACHINE" : (fileName.Contains("process") || dirName.Contains("process")) ? "PROCESS" : (fileName.Contains("driver") || dirName.Contains("driver")) ? "DRIVER" : "OTHERS";
             LastFiles[cat] = p; IsConnected = true;
             SetStreamingFile(p, true);
-            await _engine.StartSessionAsync(s, cat, p);
             await _engine.StartSessionAsync(s, cat, p);
         }
         public void SetStreamingFile(string path, bool streaming) {
@@ -164,10 +168,11 @@ namespace LogMaverick.ViewModels {
         private FileNode? FindNode(System.Collections.Generic.List<FileNode> nodes, string path) {
             foreach (var n in nodes) {
                 if (n.FullPath == path) return n;
-                var found = FindNode(new System.Collections.Generic.List<FileNode>(n.Children), path);
+                var found = FindNode(n.Children.ToList(), path);
                 if (found != null) return found;
             }
             return null;
+        }
         }
         public void Disconnect() { SetStreamingFile(ConnectedFile, false); _engine.Dispose(); IsConnected = false; IsLoading = false; ConnectedFile = ""; SessionFiles.Clear(); ClearAll(); StatusMessage = "🔌 연결 해제됨"; }
         public void ExportLogs(string tab) {
@@ -206,6 +211,8 @@ namespace LogMaverick.ViewModels {
         public void SetTree(List<FileNode> tree) {
             _fullTree = tree; FilteredTree.Clear();
             foreach (var n in tree) FilteredTree.Add(n);
+            foreach (var path in SessionFiles.Values) SetStreamingFile(path, true);
+            if (!string.IsNullOrEmpty(ConnectedFile)) SetStreamingFile(ConnectedFile, true);
         }
         public void SearchTree(string q) {
             FilteredTree.Clear();
