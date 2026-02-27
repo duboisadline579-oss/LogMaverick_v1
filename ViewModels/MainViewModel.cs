@@ -147,10 +147,6 @@ namespace LogMaverick.ViewModels {
             DriverView?.Refresh();
             OtherView?.Refresh();
         }
-            OnPropertyChanged(nameof(OtherLogs));
-        }
-        public void AddFilterHistory(string text) {
-            if (string.IsNullOrEmpty(text) || FilterHistory.Contains(text)) return;
             FilterHistory.Insert(0, text);
             if (FilterHistory.Count > 10) FilterHistory.RemoveAt(FilterHistory.Count - 1);
         }
