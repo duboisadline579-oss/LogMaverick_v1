@@ -125,8 +125,15 @@ namespace LogMaverick.ViewModels {
             return true;
         }
         private void ApplyFilter() {
-            foreach (var log in MachineLogs.Concat(ProcessLogs).Concat(DriverLogs).Concat(OtherLogs))
-                log.IsHighlighted = !string.IsNullOrEmpty(FilterText) && log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+            foreach (var log in MachineLogs.Concat(ProcessLogs).Concat(DriverLogs).Concat(OtherLogs)) {
+                bool hit = !string.IsNullOrEmpty(FilterText) && log.Message.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                log.IsHighlighted = hit;
+                log.IsVisible = string.IsNullOrEmpty(FilterText) || hit;
+            }
+            OnPropertyChanged(nameof(MachineLogs));
+            OnPropertyChanged(nameof(ProcessLogs));
+            OnPropertyChanged(nameof(DriverLogs));
+            OnPropertyChanged(nameof(OtherLogs));
         }
         public void AddFilterHistory(string text) {
             if (string.IsNullOrEmpty(text) || FilterHistory.Contains(text)) return;

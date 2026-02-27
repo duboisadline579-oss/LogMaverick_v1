@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace LogMaverick.Models {
-    public enum LogType { System, Error, Exception, Critical }
+    public enum LogType { System, Info, Warn, Error, Exception, Critical }
     
     public class ServerConfig : INotifyPropertyChanged {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -24,7 +24,15 @@ namespace LogMaverick.Models {
         public LogType Type { get; set; } = LogType.System;
         public bool IsHighlighted { get; set; } = false;
         public bool IsBookmarked { get; set; } = false;
-        public string Color => IsHighlighted ? "#FFD700" : (Type == LogType.Error ? "#FF4500" : (Type == LogType.Exception ? "#FF00FF" : "#DCDCDC"));
+        public bool IsVisible { get; set; } = true;
+        public bool IsNewMarker { get; set; } = false;
+        public string Color => IsHighlighted ? "#FFD700" : Type == LogType.Error ? "#FF4500" : Type == LogType.Exception ? "#FF00FF" : Type == LogType.Critical ? "#FF0000" : Type == LogType.Warn ? "#FFD700" : Type == LogType.Info ? "#87CEEB" : "#DCDCDC";
+    }
+
+    public class TypeRule {
+        public string Keyword { get; set; } = "";
+        public LogType Type { get; set; } = LogType.System;
+        public bool Enabled { get; set; } = true;
     }
 
     public class KeywordRule {

@@ -136,13 +136,17 @@
                         </Button>
                         <Button Content="{Binding PauseStatusText}" Click="Pause_Click" Width="80" Height="32" Background="{Binding PauseButtonColor}" Foreground="White" Margin="0,0,4,0" FontWeight="Bold" ToolTip="PAUSE: 로그 수신 중단. RESUME: 중단구간 로그 한번에 수신"/>
                         <Button Content="{Binding AutoScrollText}" Click="AutoScroll_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="AUTO: 새 로그 수신시 자동 스크롤. OFF: 스크롤 고정 (과거 탐색)"/>
-                        <Button Content="EXPORT" Click="Export_Click" Width="60" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="현재 탭 로그만 txt 저장"/>
-                        <Button Content="ALL↓" Click="ExportAll_Click" Width="42" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="전체 탭 로그를 시간순으로 txt 저장"/>
+                        <Button Content="💾 저장" Width="70" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" Margin="0,0,4,0" ToolTip="우클릭: 저장 옵션 선택">
+                            <Button.ContextMenu><ContextMenu>
+                                <MenuItem Header="📄 현재 탭만 저장" Click="Export_Click"/>
+                                <MenuItem Header="📦 전체 탭 저장 (시간순)" Click="ExportAll_Click"/>
+                            </ContextMenu></Button.ContextMenu>
+                        </Button>
                         <Button Content="CLEAR" Click="Clear_Click" Width="55" Height="32" Background="#252525" Foreground="#CCCCCC" BorderBrush="#444" ToolTip="화면 로그 초기화 (파일 영향 없음)"/>
                     </StackPanel>
                 </Grid>
             </Border>
-            <TabControl x:Name="MainTabs" Grid.Row="1" SelectionChanged="MainTabs_SelectionChanged" MouseRightButtonUp="Tab_RightClick" Background="Transparent" BorderThickness="0" Margin="8">
+            <TabControl x:Name="MainTabs" Grid.Row="1" SelectionChanged="MainTabs_SelectionChanged" Background="Transparent" BorderThickness="0" Margin="8">
                 <TabControl.Resources>
                     <ContextMenu x:Key="LogMenu">
                         <MenuItem Header="📋 메시지 복사" Click="Copy_Click"/>

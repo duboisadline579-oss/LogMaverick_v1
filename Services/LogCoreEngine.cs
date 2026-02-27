@@ -65,7 +65,9 @@ namespace LogMaverick.Services {
                 string up = line.ToUpper();
                 LogType type = up.Contains("EXCEPTION") ? LogType.Exception :
                     up.Contains("CRITICAL") || up.Contains("FATAL") ? LogType.Critical :
-                    up.Contains("ERROR") || up.Contains("FAIL") ? LogType.Error : LogType.System;
+                    up.Contains("ERROR") || up.Contains("FAIL") ? LogType.Error :
+                    up.Contains("WARN") || up.Contains("WARNING") ? LogType.Warn :
+                    up.Contains("INFO") ? LogType.Info : LogType.System;
                 var t = _timeRegex.Match(line);
                 DateTime logTime = t.Success && DateTime.TryParse(t.Groups[1].Value, out var dt) ? dt : DateTime.Now;
                 string tid = _jsonTidRegex.Match(line) is var jm && jm.Success ? jm.Groups[1].Value : ExtractTid(line);
