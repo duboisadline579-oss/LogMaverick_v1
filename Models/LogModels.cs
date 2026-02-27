@@ -27,6 +27,12 @@ namespace LogMaverick.Models {
         public string Color => IsHighlighted ? "#FFD700" : (Type == LogType.Error ? "#FF4500" : (Type == LogType.Exception ? "#FF00FF" : "#DCDCDC"));
     }
 
+    public class KeywordRule {
+        public string Keyword { get; set; } = "";
+        public string Color { get; set; } = "#FF4500";
+        public bool Notify { get; set; } = true;
+    }
+
     public class FileNode : INotifyPropertyChanged {
         public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
         private void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(n));

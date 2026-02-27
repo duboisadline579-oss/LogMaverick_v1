@@ -145,7 +145,7 @@ namespace LogMaverick.ViewModels {
             SetStreamingFile(filePath, true);
             await _engine.StartSessionAsync(config, category, filePath);
         }
-        }
+        
         public void StopSession(string category) {
             if (SessionFiles.TryGetValue(category, out var path)) SetStreamingFile(path, false);
             _engine.StopSession(category); SessionFiles.Remove(category);
@@ -173,7 +173,7 @@ namespace LogMaverick.ViewModels {
             }
             return null;
         }
-        }
+        
         public void Disconnect() { SetStreamingFile(ConnectedFile, false); _engine.Dispose(); IsConnected = false; IsLoading = false; ConnectedFile = ""; SessionFiles.Clear(); ClearAll(); StatusMessage = "🔌 연결 해제됨"; }
         public void ExportLogs(string tab) {
             try {
