@@ -213,7 +213,6 @@ namespace LogMaverick.ViewModels {
                 StatusMessage = $"✅ 전체 저장: {path}";
             } catch (Exception ex) { MessageBox.Show("Export 실패: " + ex.Message); }
         }
-        public void ResetTab(string tab) {
         public void RemoveLogsByTid(string tid) {
             WinApp.Current?.Dispatcher.InvokeAsync(() => {
                 foreach (var col in new[] { MachineLogs, ProcessLogs, DriverLogs, OtherLogs })
@@ -221,6 +220,7 @@ namespace LogMaverick.ViewModels {
                         if (col[i].Tid == tid) col.RemoveAt(i);
             });
         }
+        public void ResetTab(string tab) {
             if (tab.Contains("MACHINE")) NewMachine = 0;
             else if (tab.Contains("PROCESS")) NewProcess = 0;
             else if (tab.Contains("DRIVER")) NewDriver = 0;

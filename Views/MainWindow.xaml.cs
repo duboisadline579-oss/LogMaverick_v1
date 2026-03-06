@@ -109,9 +109,6 @@ namespace LogMaverick.Views {
                 await VM.ConnectSessionAsync(VM.SelectedServer, cat, target.FullPath);
             } catch (Exception ex) { VM.StatusMessage = $"❌ 실패: {ex.Message}"; }
         }
-                }
-            }
-        }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) { VM.SaveSettings(); VM.Disconnect(); }
         private void Pause_Click(object sender, RoutedEventArgs e) => VM.IsPaused = !VM.IsPaused;
         private void AutoScroll_Click(object sender, RoutedEventArgs e) => VM.AutoScroll = !VM.AutoScroll;
